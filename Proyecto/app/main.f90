@@ -5,11 +5,13 @@ program main
   use Cliente
   use colaImpresion
   use conteopaso
+  use ListaDeEspera
   implicit none
   type(clientes) :: clie
   type(cola) :: colaClientes
   type(listaVentanas) :: listaSVentana
   type(colaCI) :: colaImagenG, colaImagenP
+  type(listaespera) :: le
   character(len=1) :: opcion
   character (len=256 ) :: archivo
   integer :: nventana 
@@ -54,7 +56,7 @@ program main
         call colaImagenG%eliminarNodoAntiguo()
         call colaImagenP%eliminarNodoAntiguo()
         !Esto es para enciar las imagenes
-        call listaSVentana%ConteoImgagen(colaImagenG,colaImagenP)
+        call listaSVentana%ConteoImgagen(colaImagenG,colaImagenP,le)
         !call colaImagenG%print("IMG_G")
         !call colaImagenP%print("IMG_P")
         clie = colaClientes%eliminarClienteMasAntiguo()

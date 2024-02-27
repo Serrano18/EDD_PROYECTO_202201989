@@ -1,6 +1,6 @@
 module listaVentanilla
     use pilaImagenes
-    
+    use ListaDeEspera
     use colaImpresion
     use Cliente
     implicit none
@@ -155,9 +155,10 @@ module listaVentanilla
         end if
     end function ObtenerVentanillaSinConfirmar
     
-    subroutine ConteoImgagen(this,colaImagenG,colaImagenP)
+    subroutine ConteoImgagen(this,colaImagenG,colaImagenP,espera)
         class(listaVentanas), intent(inout) :: this
-        type(colaCI), intent(inout) :: colaImagenG, colaImagenP       
+        type(colaCI), intent(inout) :: colaImagenG, colaImagenP     
+        type(listaespera), intent(inout) :: espera  
         type(nodoV), pointer :: current
         integer :: suma_img 
         current => this%head
@@ -173,12 +174,18 @@ module listaVentanilla
                     current%value%contimg = current%value%contimg + 1
                     this%numImagenestot = this%numImagenestot + 1
                 else
-                    !Aqui es cuando el ventanilla ya recibio todas las imagenes
+                    !Aqui es cuando el ventanilla ya recibio todas las imagenes y las envia a las colas
                     call colaImagenG%append(current%value%clienteActual%img_g, &
                     current%value%clienteActual%nombre, "IMG_G")
                     call colaImagenP%append(current%value%clienteActual%img_p, &
                     current%value%clienteActual%nombre, "IMG_P")
                     current%value%confirmacion = .false.
+                    !Aqui se manda el cliente a la lista de espera
+                    call espera%appendle(current%value%clienteActual%id, &
+                    current%value%clienteActual%img_g, &
+                    current%value%clienteActual%img_p, &
+                    current%value%clienteActual%nombre, 0,0)
+
                     !write(*, '(A, A, A)')  "El clinte " , current%value%clienteActual%nombre ," pasa a la lista de espera"
                     write(*, '(A, A, A, A)') "El cliente ", trim(current%value%clienteActual%nombre), " pasa a la lista de espera"
                     write(*, '(A, I0, A)') "La ventanlla ", current%value%id, " envia imagenes a la cola de Impresion"
@@ -187,6 +194,6 @@ module listaVentanilla
             end if
             current => current%next
         end do
-    end subroutine
+    end subroutine ConteoImgagen
     
 end module listaVentanilla

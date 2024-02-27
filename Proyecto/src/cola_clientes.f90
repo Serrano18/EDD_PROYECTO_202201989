@@ -20,6 +20,7 @@ module  cola_clientes
       procedure :: guardar_json
       procedure :: clientesAleatorios
       procedure :: eliminarClienteMasAntiguo
+      procedure :: buscarID
   end type cola
   contains
   subroutine append(this, name, uid, img1, img2)
@@ -125,7 +126,7 @@ module  cola_clientes
 
     subroutine clientesAleatorios(this)
       class(cola), intent(inout) :: this
-      integer :: num_imagenes, i, enClientes
+      integer :: num_imagenes, i, enClientes,contador
       real :: num_clientes
       character(len=100) :: nombre
       integer :: rnombre, rapellido
@@ -149,15 +150,22 @@ module  cola_clientes
               call random_number(num_clientes)
               rapellido = int(num_clientes * size(apellidos)) + 1
               nombre = trim(nombres(rnombre)) // " " // trim(apellidos(rapellido))
+              
               call random_number(num_clientes)
-              uid = 1000 + int(num_clientes * 9000)
+                      ! Generar un nuevo ID único
+              uid = contador + 100
+              do while (this%buscarID(id))
+                  contador = contador + 1
+                  id = contador + 100
+              end do
               call random_number(num_clientes)
               img1 = int(num_clientes * 5.0)
               call random_number(num_clientes)
               img2 = int(num_clientes * 5.0)
               call this%append(nombre, uid, img1, img2)
+              contador = contador + 1
             end do
-      !call this%print()
+      call this%print()
   end subroutine clientesAleatorios
 
   function eliminarClienteMasAntiguo(this) result(client)
@@ -174,5 +182,20 @@ module  cola_clientes
     client = temp%value
     deallocate(temp)
   end function eliminarClienteMasAntiguo
-
+  
+  function buscarID(this, id) result(encontrado)
+    class(cola), intent(inout) :: this
+    integer, intent(in) :: id
+    logical :: encontrado
+    type(node), pointer :: current
+    current => this%head
+    encontrado = .false.
+    do while (associated(current) .and. .not. encontrado)
+        if (current%value%id == id) then
+            encontrado = .true.
+        else
+            current => current%next
+        end if
+    end do
+  end function buscarID
 end module cola_clientes 
