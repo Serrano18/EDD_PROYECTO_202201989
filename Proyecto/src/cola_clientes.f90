@@ -154,9 +154,9 @@ module  cola_clientes
               call random_number(num_clientes)
                       ! Generar un nuevo ID único
               uid = contador + 100
-              do while (this%buscarID(id))
+              do while (this%buscarID(uid))
                   contador = contador + 1
-                  id = contador + 100
+                  uid = contador + 100
               end do
               call random_number(num_clientes)
               img1 = int(num_clientes * 5.0)
@@ -183,15 +183,15 @@ module  cola_clientes
     deallocate(temp)
   end function eliminarClienteMasAntiguo
   
-  function buscarID(this, id) result(encontrado)
+  function buscarID(this, ui) result(encontrado)
     class(cola), intent(inout) :: this
-    integer, intent(in) :: id
+    integer, intent(in) :: ui
     logical :: encontrado
     type(node), pointer :: current
     current => this%head
     encontrado = .false.
     do while (associated(current) .and. .not. encontrado)
-        if (current%value%id == id) then
+        if (current%value%id == ui) then
             encontrado = .true.
         else
             current => current%next

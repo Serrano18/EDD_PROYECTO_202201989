@@ -1,11 +1,12 @@
 module listaVentanilla
+
     use pilaImagenes
-    use ListaDeEspera
-    use colaImpresion
     use Cliente
+    use colaImpresion
+    use ListaDeEspera
     implicit none
     type, public :: Ventana 
-        integer :: id
+        integer :: idve
         integer contimg 
         type(pilaImagen):: pilaImagens
         type(clientes) :: clienteActual
@@ -29,10 +30,8 @@ module listaVentanilla
         procedure :: agregarClienteActual
         procedure :: AgregarImagenAPila
         procedure :: ConteoImgagen
-        !procedure :: Veliminar
-        !procedure :: Vdisponible
-        !procedure :: GraficarV
     end type listaVentanas
+    
     type(Imagen) :: nuevaImagen
     contains
     subroutine Vinsertar(this, cant)
@@ -43,7 +42,7 @@ module listaVentanilla
         integer :: i 
         do i=1, cant
             allocate(temp)
-            temp%value%id = i
+            temp%value%idve = i
             temp%value%contimg = 0
             temp%next => null()
             if (.not. associated(this%head)) then
@@ -64,7 +63,7 @@ module listaVentanilla
         print *, '|                          Listado de Ventanillas:                           |'
         print *, '|-------------------------------------------------------------------------|'
         do while (associated(current))
-            write(*,*)  "Ventanilla ",current%value%id
+            write(*,*)  "Ventanilla ",current%value%idve
             current => current%next
         end do 
     end subroutine Vprint
@@ -77,11 +76,11 @@ module listaVentanilla
         do while (associated(current))
             nextNode => current%next
             do while (associated(nextNode))
-                if (current%value%id > nextNode%value%id) then
+                if (current%value%idve > nextNode%value%idve) then
                     ! Intercambiar los valores de id
-                    tempId = current%value%id
-                    current%value%id = nextNode%value%id
-                    nextNode%value%id = tempId
+                    tempId = current%value%idve
+                    current%value%idve = nextNode%value%idve
+                    nextNode%value%idve = tempId
                 end if
                 nextNode => nextNode%next
             end do
@@ -92,13 +91,13 @@ module listaVentanilla
     end subroutine Vordenar
 
     ! Método para agregar una imagen a la pila de imágenes de la ventana en uso
-    subroutine AgregarImagenAPila(this, idVentana, idImagen, img_g, img_p, nombreC)
+    subroutine AgregarImagenAPila(this, idVentana, idImagen, img_g, img_p, nombreC,idcliente)
         class(listaVentanas), intent(inout) :: this
-        integer, intent(in) :: idVentana, idImagen, img_g, img_p
+        integer, intent(in) :: idVentana, idImagen, img_g, img_p,idcliente
         character, intent(in) :: nombreC
         type(nodoV), pointer :: current
         current => this%head
-        do while (associated(current) .and. current%value%id /= idVentana)
+        do while (associated(current) .and. current%value%idve /= idVentana)
             current => current%next
         end do
         if (associated(current)) then
@@ -107,6 +106,7 @@ module listaVentanilla
             nuevaImagen%img_g = img_g
             nuevaImagen%img_p = img_p
             nuevaImagen%nombreC = nombreC
+            nuevaImagen%idclient = idcliente
             call current%value%pilaImagens%Push(nuevaImagen)
         else
             print *, 'Error: No se encontró la ventana con el ID especificado.'
@@ -120,7 +120,7 @@ module listaVentanilla
         type(nodoV), pointer :: current
 
         current => this%head
-        do while (associated(current) .and. current%value%id /= idVent)
+        do while (associated(current) .and. current%value%idve /= idVent)
             current => current%next
         end do
         if (associated(current)) then
@@ -142,7 +142,7 @@ module listaVentanilla
         do while (associated(current) .and. .not. ventanaEncontrada)
             if (.not. current%value%confirmacion) then
                 current%value%confirmacion = .true.
-                idVentanilla = current%value%id
+                idVentanilla = current%value%idve
                 ventanaEncontrada = .true.
             else
                 current => current%next
@@ -166,29 +166,34 @@ module listaVentanilla
             if (current%value%confirmacion) then
                 suma_img = current%value%clienteActual%img_g + current%value%clienteActual%img_p
                 if (suma_img /= current%value%contimg) then
-                    write(*, '(A, I0, A)') "La ventanilla ", current%value%id, " recibe una imagen."
-                    call this%AgregarImagenAPila( current%value%id, &
+                    write(*, '(A, I0, A)') "La ventanilla ", current%value%idve, " recibe una imagen."
+                    call this%AgregarImagenAPila( current%value%idve, &
                      this%numImagenestot, current%value%clienteActual%img_g, &
                       current%value%clienteActual%img_p, &
-                      current%value%clienteActual%nombre)
+                      current%value%clienteActual%nombre, &
+                      current%value%clienteActual%id)
                     current%value%contimg = current%value%contimg + 1
                     this%numImagenestot = this%numImagenestot + 1
                 else
                     !Aqui es cuando el ventanilla ya recibio todas las imagenes y las envia a las colas
-                    call colaImagenG%append(current%value%clienteActual%img_g, &
-                    current%value%clienteActual%nombre, "IMG_G")
-                    call colaImagenP%append(current%value%clienteActual%img_p, &
-                    current%value%clienteActual%nombre, "IMG_P")
+                    !Aqui se mandan las imagenes a la cola
+                    call colaImagenG%appendcl(current%value%clienteActual%img_g, &
+                    current%value%clienteActual%nombre, "IMG_G", & 
+                    current%value%clienteActual%id)
+                    call colaImagenP%appendcl(current%value%clienteActual%img_p, &
+                    current%value%clienteActual%nombre, "IMG_P", & 
+                    current%value%clienteActual%id)
                     current%value%confirmacion = .false.
                     !Aqui se manda el cliente a la lista de espera
-                    call espera%appendle(current%value%clienteActual%id, &
+                    call espera%appendle(current%value%idve,&
+                    current%value%clienteActual%id, &
                     current%value%clienteActual%img_g, &
                     current%value%clienteActual%img_p, &
                     current%value%clienteActual%nombre, 0,0)
-
+                    !call espera%printListaEspera()
                     !write(*, '(A, A, A)')  "El clinte " , current%value%clienteActual%nombre ," pasa a la lista de espera"
                     write(*, '(A, A, A, A)') "El cliente ", trim(current%value%clienteActual%nombre), " pasa a la lista de espera"
-                    write(*, '(A, I0, A)') "La ventanlla ", current%value%id, " envia imagenes a la cola de Impresion"
+                    write(*, '(A, I0, A)') "La ventanlla ", current%value%idve, " envia imagenes a la cola de Impresion"
 
                 end if
             end if

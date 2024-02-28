@@ -1,6 +1,7 @@
 program main
  
   use cola_clientes
+  use clienteAtendidos
   use listaVentanilla
   use Cliente
   use colaImpresion
@@ -12,11 +13,13 @@ program main
   type(listaVentanas) :: listaSVentana
   type(colaCI) :: colaImagenG, colaImagenP
   type(listaespera) :: le
+  type(listaClientesA)::listaDeClientesAtendidos
   character(len=1) :: opcion
   character (len=256 ) :: archivo
   integer :: nventana 
   integer :: idVentanilla
   pasos=1
+  conteoid = 100
   do 
     print *, ""
       print *, "|-----------------------------------------|"
@@ -52,9 +55,12 @@ program main
         print *, '|------------------------------------------------------------|'
         write(*, '(A, I0, A)') '|------------------------- Paso ',pasos,' ----------------------------|'
         print *, '|------------------------------------------------------------|'
-        !Esto es para eliminar en la cola 
-        call colaImagenG%eliminarNodoAntiguo()
-        call colaImagenP%eliminarNodoAntiguo()
+
+
+        !call le%verificarAtendidos(listaDeClientesAtendidos,pasos)
+                !Esto es para eliminar en la cola 
+        call colaImagenG%eliminarNodoAntiguo(le)
+        call colaImagenP%eliminarNodoAntiguo(le)
         !Esto es para enciar las imagenes
         call listaSVentana%ConteoImgagen(colaImagenG,colaImagenP,le)
         !call colaImagenG%print("IMG_G")
@@ -65,6 +71,8 @@ program main
             call listaSVentana%agregarClienteActual(idVentanilla, clie)
         end if
         pasos = pasos + 1
+        print *, '|------------------------------------------------------------|'
+        print *, ""
       case ('4')
           
       case ('5')

@@ -1,7 +1,7 @@
 module pilaImagenes
     implicit none
     type, public :: Imagen
-        integer :: id, img_g, img_p
+        integer :: id, img_g, img_p,idclient
         character :: nombreC
         integer :: vent
     end type Imagen       
