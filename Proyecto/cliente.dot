@@ -1,0 +1,5 @@
+ digraph colac {
+     node [shape=box, style=filled];
+ rankdir = LR;
+      "Node           3 " [label="Maria Garcia\nIMG_T:            4 \nVentanilla:           2 \n Pasos:          13 \nImg_G:           2 \nImg_P:           2 ", shape=box];
+ }

@@ -1,5 +1,5 @@
 module colaImpresion
-    use ListaDeEspera
+    
     implicit none
     integer :: ConteoIP = 0
     type, public :: imag
@@ -23,6 +23,7 @@ module colaImpresion
         procedure :: deletecl
         procedure :: printcl
         procedure :: eliminarNodoAntiguo
+        procedure :: graficarcolaimpresion
     end type colaCI
 
     contains
@@ -87,6 +88,7 @@ module colaImpresion
     end subroutine printcl
 
     subroutine eliminarNodoAntiguo(this,esperal)
+        use ListaDeEspera
         class(colaCI), intent(inout) :: this
         type (listaespera), intent(inout) :: esperal
         type(nodoCI), pointer :: current, previous, temp
@@ -148,4 +150,59 @@ module colaImpresion
         end do
         !call this%printcl("image")
     end subroutine eliminarNodoAntiguo
+     
+    subroutine graficarcolaimpresion(this, colapeque, filename)
+        class(colaCI), intent(in) :: this
+        class(colaCI), intent(in) :: colapeque
+        character(len=*) :: filename
+        integer :: unit
+        type(nodoCI),pointer :: current
+        integer :: count
+        open(unit,file = filename,status='replace')
+        write(unit, *) 'digraph colac {'
+        write(unit, *) '    node [shape=box, style=filled];' ! Aplicar atributos a todos los nodos
+        write(unit,*) 'rankdir = LR;'
+        write(unit, *) '    "Impresora Grande" [label="Impresora Grande", shape=box, color=blue];'
+    
+        ! Escribir nodos y conexiones
+        current => this%head
+        count = 0
+        write(unit, *) '    "Impresora Grande" -> "Node', count+1, '";' ! Conectar impresora grande con primer nodo de this
+        do while (associated(current))
+            count = count + 1
+            write(unit, *) '    "Node', count, '" [label="', trim(current%value%tipo), '", shape=box];'
+            if (associated(current%next)) then
+                write(unit, *) '    "Node', count, '" -> "Node', count+1, '";'
+           end if
+            current => current%next
+        end do 
+        
+          ! Escribir nodo de impresora pequeña
+        write(unit, *) '    "Impresora Pequeña" [label="Impresora Pequeña", shape=box, color=red];'
+        ! Escribir nodos y conexiones de la cola colapeque
+        current => colapeque%head
+        count = 0
+        write(unit, *) '    "Impresora Pequeña" [label="Impresora Pequeña", shape=box, color=red];'
+
+        ! Escribir nodos y conexiones de la cola colapeque
+        current => colapeque%head
+        count = 0
+        write(unit, *) '    "Impresora Pequeña" ->  "NodeP', count+1, '";'! Conectar impresora pequeña con primer nodo de colapeque
+        do while (associated(current))
+            count = count + 1
+            write(unit, *) '    "NodeP', count, '" [label="', trim(current%value%tipo),'", shape=box];'
+            if (associated(current%next)) then
+                write(unit, *) '    "NodeP', count, '" -> "NodeP', count+1, '";'
+            end if
+            current => current%next
+        end do
+        ! Cerrar el archivo DOT
+        write(unit, *) '}'
+        close(unit)
+            ! Generar el archivo PNG utilizando Graphviz
+        call system('dot -Tpng ' // trim(filename) // ' -o ' // trim(adjustl(filename)) // '.png')
+        
+        print *, 'Graphviz file generated: ', trim(adjustl(filename)) // '.png'
+
+    end subroutine graficarcolaimpresion
 end module colaImpresion

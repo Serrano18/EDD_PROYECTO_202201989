@@ -40,7 +40,7 @@ module listaimagenes
                 this%tail%next => temp
                 this%tail => temp
             end if
-        call this%print(tip)
+        !call this%print(tip)
     end subroutine append
 
     subroutine delete(this)
@@ -48,7 +48,7 @@ module listaimagenes
         type(nodoILE), pointer :: temp
 
         if (.not. associated(this%head)) then
-            print *, 'Cola Imagenes Pequeñas Vacia'
+            print *, 'Cola Img_P Vacia'
             return
         end if
 

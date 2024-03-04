@@ -1,5 +1,5 @@
 module  cola_clientes
-    !El codigo de este archivo fue copiado del repositorio del aux y modificado por mí
+        !El codigo de este archivo fue copiado del repositorio del aux y modificado por mí
   use cliente
   use json_module
   implicit none
@@ -21,6 +21,7 @@ module  cola_clientes
       procedure :: clientesAleatorios
       procedure :: eliminarClienteMasAntiguo
       procedure :: buscarID
+      procedure :: graficarcolaclientes
   end type cola
   contains
   subroutine append(this, name, uid, img1, img2)
@@ -36,6 +37,7 @@ module  cola_clientes
       temp%value%id = uid
       temp%value%img_g = img1
       temp%value%img_p = img2
+      !temp%value%is_init = .true.
       temp%next => null()
       
 
@@ -119,7 +121,7 @@ module  cola_clientes
         end if 
         call this%append(nombre, u_id, img_1, img_2)
       end do
-      call this%print()
+      !call this%print()
       call json%destroy()
     end subroutine guardar_json
 
@@ -165,7 +167,7 @@ module  cola_clientes
               call this%append(nombre, uid, img1, img2)
               contador = contador + 1
             end do
-      call this%print()
+      !call this%print()
   end subroutine clientesAleatorios
 
   function eliminarClienteMasAntiguo(this) result(client)
@@ -174,7 +176,7 @@ module  cola_clientes
     type(node), pointer :: temp
 
     if (.not. associated(this%head)) then
-      print *, 'La cola está vacía, no hay clientes para eliminar.'
+      print *, 'La cola estáa vacia, no hay clientes para eliminar.'
       return
     end if
     temp => this%head
@@ -198,4 +200,40 @@ module  cola_clientes
         end if
     end do
   end function buscarID
+
+
+  subroutine graficarcolaclientes(this,filename)
+    class(cola),intent(in) :: this
+    character(len=*) :: filename
+    integer :: unit
+    type(node),pointer :: current
+    integer :: count
+
+    open(unit,file = filename,status='replace')
+    write(unit, *) 'digraph colac {'
+    write(unit, *) '    node [shape=box, style=filled];' ! Aplicar atributos a todos los nodos
+    write(unit,*) 'rankdir = LR;'
+    ! Escribir nodos y conexiones
+    current => this%head
+    count = 0
+    do while (associated(current))
+        count = count + 1
+        write(unit, *) '     "Node', count, '" [label="', trim(current%value%nombre), '\nIMG_G: ', &
+        current%value%img_g, '\nIMG_P:', current%value%img_p,'", shape=box];'
+        if (associated(current%next)) then
+            write(unit, *) '    "Node', count, '" -> "Node', count+1, '";'
+        end if
+        current => current%next
+    end do 
+
+    ! Cerrar el archivo DOT
+    write(unit, *) '}'
+    close(unit)
+        ! Generar el archivo PNG utilizando Graphviz
+    call system('dot -Tpng ' // trim(filename) // ' -o ' // trim(adjustl(filename)) // '.png')
+    
+    print *, 'Graphviz file generated: ', trim(adjustl(filename)) // '.png'
+  end subroutine graficarcolaclientes
+
+
 end module cola_clientes 

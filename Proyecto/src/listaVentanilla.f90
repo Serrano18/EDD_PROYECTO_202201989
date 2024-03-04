@@ -1,9 +1,9 @@
 module listaVentanilla
 
+    
+    
     use pilaImagenes
     use Cliente
-    use colaImpresion
-    use ListaDeEspera
     implicit none
     type, public :: Ventana 
         integer :: idve
@@ -30,6 +30,7 @@ module listaVentanilla
         procedure :: agregarClienteActual
         procedure :: AgregarImagenAPila
         procedure :: ConteoImgagen
+        procedure :: graficarventanillas
     end type listaVentanas
     
     type(Imagen) :: nuevaImagen
@@ -63,7 +64,12 @@ module listaVentanilla
         print *, '|                          Listado de Ventanillas:                           |'
         print *, '|-------------------------------------------------------------------------|'
         do while (associated(current))
-            write(*,*)  "Ventanilla ",current%value%idve
+            write(*,'(A,I0)')  "Ventanilla ",current%value%idve
+            if (current%value%clienteActual%id/=-1) then
+                write(*,'(A,A)') "Cliente: ",trim(current%value%clienteActual%nombre)
+            else
+                print *, "Cliente: Vacio"
+            end if
             current => current%next
         end do 
     end subroutine Vprint
@@ -92,6 +98,7 @@ module listaVentanilla
 
     ! Método para agregar una imagen a la pila de imágenes de la ventana en uso
     subroutine AgregarImagenAPila(this, idVentana, idImagen, img_g, img_p, nombreC,idcliente)
+        use pilaImagenes
         class(listaVentanas), intent(inout) :: this
         integer, intent(in) :: idVentana, idImagen, img_g, img_p,idcliente
         character, intent(in) :: nombreC
@@ -109,26 +116,34 @@ module listaVentanilla
             nuevaImagen%idclient = idcliente
             call current%value%pilaImagens%Push(nuevaImagen)
         else
-            print *, 'Error: No se encontró la ventana con el ID especificado.'
+            print *, 'Error: No se encontro la ventana con el ID especificado.'
         end if
     end subroutine AgregarImagenAPila
 
-    subroutine agregarClienteActual(this, idVent, clien)
+    subroutine agregarClienteActual(this, idVent, clien,pa)
+        use Cliente
         class(listaVentanas), intent(inout) :: this
-        integer, intent(in) ::idVent
-        type(clientes), intent(in) :: clien
+        integer, intent(in) ::idVent,pa
+        type(clientes), intent(inout) :: clien
         type(nodoV), pointer :: current
-
+       
         current => this%head
         do while (associated(current) .and. current%value%idve /= idVent)
             current => current%next
         end do
         if (associated(current)) then
+            clien%pasoInicio = pa
             current%value%clienteActual = clien
-            write(*,'(A, I0, A, I0)') "EL CLIENTE ", clien%id, " INGRESA A VENTANILLA ", idVent
+            
+            if (clien%id/=-1) then
+                write(*,'(A, A, A, I0)') "EL CLIENTE ", trim(clien%nombre), " INGRESA A VENTANILLA ", idVent
+            else
+                print *, "Ya no hay clientes"
+            end if
         else
-            print *, 'Error: No se encontró la ventana con el ID especificado.'
+            print *, 'Error: No se encontro la ventana con el ID especificado.'
         end if
+        call this%Vprint()
     end subroutine agregarClienteActual
 
     function ObtenerVentanillaSinConfirmar(this) result(idVentanilla)
@@ -156,6 +171,9 @@ module listaVentanilla
     end function ObtenerVentanillaSinConfirmar
     
     subroutine ConteoImgagen(this,colaImagenG,colaImagenP,espera)
+        use colaImpresion
+        use ListaDeEspera
+        use Cliente
         class(listaVentanas), intent(inout) :: this
         type(colaCI), intent(inout) :: colaImagenG, colaImagenP     
         type(listaespera), intent(inout) :: espera  
@@ -163,23 +181,23 @@ module listaVentanilla
         integer :: suma_img 
         current => this%head
         do while (associated(current))
-            if (current%value%confirmacion) then
+            if (current%value%confirmacion .and. current%value%clienteActual%id/=-1) then
                 suma_img = current%value%clienteActual%img_g + current%value%clienteActual%img_p
                 if (suma_img /= current%value%contimg) then
+                    current%value%contimg = current%value%contimg + 1
                     write(*, '(A, I0, A)') "La ventanilla ", current%value%idve, " recibe una imagen."
                     call this%AgregarImagenAPila( current%value%idve, &
                      this%numImagenestot, current%value%clienteActual%img_g, &
                       current%value%clienteActual%img_p, &
                       current%value%clienteActual%nombre, &
                       current%value%clienteActual%id)
-                    current%value%contimg = current%value%contimg + 1
+                    
                     this%numImagenestot = this%numImagenestot + 1
                 else
                     !Aqui es cuando el ventanilla ya recibio todas las imagenes y las envia a las colas
                     !Aqui se mandan las imagenes a la cola
-                    call colaImagenG%appendcl(current%value%clienteActual%img_g, &
-                    current%value%clienteActual%nombre, "IMG_G", & 
-                    current%value%clienteActual%id)
+                    call colaImagenG%appendcl(current%value%clienteActual%img_g, current%value%clienteActual%nombre, &
+                    "IMG_G", current%value%clienteActual%id)
                     call colaImagenP%appendcl(current%value%clienteActual%img_p, &
                     current%value%clienteActual%nombre, "IMG_P", & 
                     current%value%clienteActual%id)
@@ -189,11 +207,13 @@ module listaVentanilla
                     current%value%clienteActual%id, &
                     current%value%clienteActual%img_g, &
                     current%value%clienteActual%img_p, &
-                    current%value%clienteActual%nombre, 0,0)
-                    !call espera%printListaEspera()
-                    !write(*, '(A, A, A)')  "El clinte " , current%value%clienteActual%nombre ," pasa a la lista de espera"
-                    write(*, '(A, A, A, A)') "El cliente ", trim(current%value%clienteActual%nombre), " pasa a la lista de espera"
+                    current%value%clienteActual%nombre,0,0,&
+                    current%value%clienteActual%pasoInicio)
+                    !call espera%printListaEspera()      
+                    this%numImagenestot = 0
+                    write(*, '(A, A, A)') "El cliente ", trim(current%value%clienteActual%nombre), " pasa a la lista de espera"
                     write(*, '(A, I0, A)') "La ventanlla ", current%value%idve, " envia imagenes a la cola de Impresion"
+                    call current%value%pilaImagens%VaciarPila()
 
                 end if
             end if
@@ -201,4 +221,46 @@ module listaVentanilla
         end do
     end subroutine ConteoImgagen
     
+
+    subroutine graficarventanillas(this,filename)
+        class(listaVentanas), intent(in) :: this
+        character(len=*),intent(in) :: filename
+        integer :: unit
+        type(nodoV),pointer :: current
+        integer :: count
+
+        open(unit, file=filename, status='replace')
+        write(unit, *) 'digraph pilasImagenes {'
+        write(unit, *) '    node [shape=box, style=filled];' ! Aplicar atributos a todos los nodos
+        write(unit, *) 'rankdir = LR;'
+        
+        current => this%head
+        count = 0
+        do while (associated(current))
+            count = count + 1
+            write(unit, *) '     "Ventanilla', count, '" [label="Ventanilla ', & 
+            current%value%idve, '\nCantidad de imágenes: ', &
+             current%value%contimg, '", shape=box];'
+            if (current%value%contimg > 0) then
+                write(unit, '(A, I0)') '     subgraph cluster_', count, ' {'
+                write(unit, *) '        label="Pila de Imágenes";'
+                write(unit, *) '        color=blue;'
+                call current%value%pilaImagens%graficarpilaimagen(unit)
+                write(unit, *) '     }'
+            end if
+            if (associated(current%next)) then
+                write(unit, *) '    "Ventanilla', count, '" -> "Ventanilla', count+1, '";'
+            end if
+            current => current%next
+        end do 
+
+        ! Cerrar el archivo DOT
+        write(unit, *) '}'
+        close(unit)
+        ! Generar el archivo PNG utilizando Graphviz
+        call system('dot -Tpng ' // trim(filename) // ' -o ' // trim(adjustl(filename)) // '.png')
+        
+        print *, 'Graphviz file generated: ', trim(adjustl(filename)) // '.png'
+
+    end subroutine graficarventanillas
 end module listaVentanilla

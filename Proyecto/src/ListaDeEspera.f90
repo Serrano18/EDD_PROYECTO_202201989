@@ -1,11 +1,11 @@
 module ListaDeEspera
     use cliente
     use listaimagenes
-    use clienteAtendidos
+    
     implicit none
     type, public :: clienteEspera
          
-    integer :: idc, ceimg_g, ceimg_p,idv
+    integer :: idc=-1, ceimg_g, ceimg_p,idv,pasosre
     character (len=100) :: cenombre
     integer :: igrecibida = 0
     integer :: iprecibida = 0
@@ -20,6 +20,7 @@ module ListaDeEspera
     end type nodoclie
 
     type, public :: listaespera
+        integer :: size = 0
         type(nodoclie), pointer :: head => null()
         type(nodoclie), pointer :: tail => null()
         contains
@@ -32,12 +33,14 @@ module ListaDeEspera
 
 
     contains
-        subroutine appendle(this, vi, ui,ig,ip,name,igr,ipr)
+        subroutine appendle(this, vi, ui,ig,ip,name,igr,ipr,pasor)
+            
             class(listaespera), intent(inout) :: this
-            integer,intent(in) :: ui,ig,ip,igr,ipr,vi
+            integer,intent(in) :: ui,ig,ip,igr,ipr,vi,pasor
             character (len=100), intent (in) ::name
             type(nodoclie), pointer :: temp
-
+            this%size = this%size+1
+            !print *, "se agrego "
             allocate(temp)
             temp%value%idc = ui
             temp%value%idv = vi
@@ -46,6 +49,8 @@ module ListaDeEspera
             temp%value%cenombre = name
             temp%value%igrecibida = igr            
             temp%value%iprecibida = ipr
+            temp%value%pasosre = pasor
+           
             if (.not. associated(this%head)) then
                 this%head => temp
                 this%tail => temp
@@ -67,7 +72,7 @@ module ListaDeEspera
         type(nodoclie), pointer :: temp
 
         if (.not. associated(this%head)) then
-            print *, 'Lista de espera vacía'
+            print *, 'Lista de espera vacia'
             return
         end if
 
@@ -108,59 +113,60 @@ module ListaDeEspera
         
     end subroutine incrementarImagenRecibida
     
+
     subroutine verificarAtendidos(this, listaAtendidos, pasoActual)
+        use clienteAtendidos
         class(listaespera), intent(inout) :: this
         class(listaClientesA), intent(inout) :: listaAtendidos
         integer, intent(in) :: pasoActual
-        type(nodoclie), pointer :: current, previous, temp 
-        logical :: eliminarNodo
-    
+        type(nodoclie), pointer :: current, temp 
+        integer :: i
         current => this%head
-        previous => null()
-        do while (associated(current))
-            eliminarNodo = .false.
+        do i=0, this%size-1
             if (current%value%igrecibida == current%value%ceimg_g .and. &
                 current%value%iprecibida == current%value%ceimg_p) then
                 ! Eliminar el nodo y enviar a lista de atendidos
-                eliminarNodo = .true.
-            end if
-    
-            if (eliminarNodo) then
-                allocate(temp)
-                temp%value = current%value
-                call listaAtendidos%insertarCliente(temp%value%cenombre, temp%value%idv, &
-                                                     temp%value%igrecibida + temp%value%iprecibida, pasoActual)
-                if (associated(previous)) then
-                    previous%next => current%next
-                else
+                temp => current
+                call listaAtendidos%insertarCliente(temp%value%cenombre, &
+                    temp%value%idv, temp%value%igrecibida + temp%value%iprecibida, &
+                    pasoActual-temp%value%pasosre, temp%value%ceimg_g, temp%value%ceimg_p)
+                    write(*, '(A, A, A, A)') "El cliente " ,trim(temp%value%cenombre) ," salio de la lista de espera"
+                if (i==0) then
                     this%head => current%next
+                    current%next%prev=>this%tail
+                    this%tail%next => this%head
+                else if (i==this%size-1) then
+                    this%head => current%next
+                    current%next%prev=>this%tail
+                    this%tail%next => this%head
+                else if(i/=0 .or. i/=this%size-1) then
+                    current%prev%next => current%next
+                    current%next%prev => current%prev
                 end if
-                deallocate(current)
-                current => previous%next
-            else
-                previous => current
-                current => current%next
-            end if
+                deallocate(temp)
+                this%size = this%size-1
+            end if 
+            current=> current%next
         end do
-    end subroutine verificarAtendidos    
+    end subroutine verificarAtendidos      
 
     subroutine printListaEspera(this)
         class(listaespera), intent(in) :: this
         type(nodoclie), pointer :: current
-    
+        integer :: i
         current => this%head
         print *, 'Lista de espera:'
         print *, '-------------------------------------'
-        do while (associated(current))
-            print *, 'ID Cliente: ', current%value%idc
-            print *, 'ID Ventanilla: ', current%value%idv
-            print *, 'Nombre: ', current%value%cenombre
-            print *, 'Imagenes G recibidas: ', current%value%igrecibida
-            print *, 'Imagenes P recibidas: ', current%value%iprecibida
-            print *, '-------------------------------------'
+        do i=0, this%size-1
+            if (current%value%idc/=-1) then
+                print *, 'ID Cliente: ', current%value%idc
+                print *, 'ID Ventanilla: ', current%value%idv
+                print *, 'Nombre: ', current%value%cenombre
+                print *, 'Imagenes G recibidas: ', current%value%igrecibida
+                print *, 'Imagenes P recibidas: ', current%value%iprecibida
+                print *, '-------------------------------------'
+            end if
             current => current%next
         end do
-    end subroutine printListaEspera
-    
-            
+    end subroutine printListaEspera        
 end module ListaDeEspera

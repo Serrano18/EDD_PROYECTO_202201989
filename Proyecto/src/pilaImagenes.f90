@@ -2,7 +2,7 @@ module pilaImagenes
     implicit none
     type, public :: Imagen
         integer :: id, img_g, img_p,idclient
-        character :: nombreC
+        character (len=100) :: nombreC
         integer :: vent
     end type Imagen       
     type, public :: nodoI
@@ -15,6 +15,8 @@ module pilaImagenes
         procedure :: Push
         procedure :: Pop
         procedure :: Iprint
+        procedure :: graficarpilaimagen
+        procedure :: VaciarPila
 
     end type pilaImagen     
     contains
@@ -65,4 +67,24 @@ module pilaImagenes
         end do
         this%head => null()
     end subroutine VaciarPila
+
+    subroutine graficarpilaimagen(this,unit)
+        class(pilaImagen), intent(in) :: this
+        integer, intent(inout):: unit
+        integer :: count1
+        type(nodoI), pointer :: current
+
+        current => this%head
+        do while (associated(current))
+            write(unit, *) '         "imagen', count1, '" [label="ID: ', &
+            current%valor%vent, '\nNombre: ', &
+             trim(current%valor%nombreC), '\nIMG_G: ', current%valor%img_g, &
+              '\nIMG_P: ', current%valor%img_p, '"];'
+            if (associated(current%next)) then
+                write(unit, *) '         "imagen', count1, '" -> "imagen', count1+1, '";'
+            end if
+            count1 = count1 + 1
+            current => current%next
+        end do
+    end subroutine graficarpilaimagen
 end module pilaImagenes
