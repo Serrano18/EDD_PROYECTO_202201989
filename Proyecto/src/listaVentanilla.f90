@@ -227,12 +227,12 @@ module listaVentanilla
         character(len=*),intent(in) :: filename
         integer :: unit
         type(nodoV),pointer :: current
-        integer :: count
+        integer :: count,imgCount
 
         open(unit, file=filename, status='replace')
         write(unit, *) 'digraph pilasImagenes {'
         write(unit, *) '    node [shape=box, style=filled];' ! Aplicar atributos a todos los nodos
-        write(unit, *) 'rankdir = LR;'
+        write(unit, *) 'rankdir = TB;'
         
         current => this%head
         count = 0
