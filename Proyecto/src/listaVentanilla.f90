@@ -227,7 +227,7 @@ module listaVentanilla
         character(len=*),intent(in) :: filename
         integer :: unit
         type(nodoV),pointer :: current
-        integer :: count,imgCount
+        integer :: count
 
         open(unit, file=filename, status='replace')
         write(unit, *) 'digraph pilasImagenes {'

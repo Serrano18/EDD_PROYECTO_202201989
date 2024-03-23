@@ -1,4 +1,4 @@
  digraph colac {
      node [shape=box, style=filled];
-     "ClienteMasPasos" [label="Maria Garcia\nN#_IMG:            4 \nN#Ventanilla:           2 \nN#Pasos:          13 ", shape=box];
+     "ClienteMasPasos" [label="Diego Fernandez\nN#_IMG:            4 \nN#Ventanilla:           2 \nN#Pasos:          14 ", shape=box];
  }

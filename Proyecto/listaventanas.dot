@@ -1,7 +1,7 @@
  digraph pilasImagenes {
      node [shape=box, style=filled];
- rankdir = LR;
-      "Ventanilla           1 " [label="Ventanilla            1 \nCantidad de imágenes:           13 ", shape=box];
+ rankdir = TB;
+      "Ventanilla           1 " [label="Ventanilla            1 \nCantidad de imágenes:           18 ", shape=box];
      subgraph cluster_1
  {
          label="Pila de Imágenes";
@@ -23,9 +23,19 @@
           "imagen           7 " [label="ID:            1 \nNombre: A\nIMG_G:            1 \nIMG_P:            1 "];
           "imagen           7 " -> "imagen           8 ";
           "imagen           8 " [label="ID:            1 \nNombre: A\nIMG_G:            1 \nIMG_P:            1 "];
+          "imagen           8 " -> "imagen           9 ";
+          "imagen           9 " [label="ID:            1 \nNombre: A\nIMG_G:            1 \nIMG_P:            1 "];
+          "imagen           9 " -> "imagen          10 ";
+          "imagen          10 " [label="ID:            1 \nNombre: A\nIMG_G:            1 \nIMG_P:            1 "];
+          "imagen          10 " -> "imagen          11 ";
+          "imagen          11 " [label="ID:            1 \nNombre: A\nIMG_G:            1 \nIMG_P:            1 "];
+          "imagen          11 " -> "imagen          12 ";
+          "imagen          12 " [label="ID:            1 \nNombre: A\nIMG_G:            1 \nIMG_P:            1 "];
+          "imagen          12 " -> "imagen          13 ";
+          "imagen          13 " [label="ID:            1 \nNombre: A\nIMG_G:            1 \nIMG_P:            1 "];
       }
      "Ventanilla           1 " -> "Ventanilla           2 ";
-      "Ventanilla           2 " [label="Ventanilla            2 \nCantidad de imágenes:           10 ", shape=box];
+      "Ventanilla           2 " [label="Ventanilla            2 \nCantidad de imágenes:           15 ", shape=box];
      subgraph cluster_2
  {
          label="Pila de Imágenes";
@@ -41,36 +51,29 @@
           "imagen           4 " [label="ID:            2 \nNombre: E\nIMG_G:            1 \nIMG_P:            1 "];
           "imagen           4 " -> "imagen           5 ";
           "imagen           5 " [label="ID:            2 \nNombre: E\nIMG_G:            1 \nIMG_P:            1 "];
+          "imagen           5 " -> "imagen           6 ";
+          "imagen           6 " [label="ID:            2 \nNombre: E\nIMG_G:            1 \nIMG_P:            1 "];
+          "imagen           6 " -> "imagen           7 ";
+          "imagen           7 " [label="ID:            2 \nNombre: E\nIMG_G:            1 \nIMG_P:            1 "];
+          "imagen           7 " -> "imagen           8 ";
+          "imagen           8 " [label="ID:            2 \nNombre: E\nIMG_G:            1 \nIMG_P:            1 "];
+          "imagen           8 " -> "imagen           9 ";
+          "imagen           9 " [label="ID:            2 \nNombre: E\nIMG_G:            1 \nIMG_P:            1 "];
+          "imagen           9 " -> "imagen          10 ";
+          "imagen          10 " [label="ID:            2 \nNombre: E\nIMG_G:            1 \nIMG_P:            1 "];
       }
      "Ventanilla           2 " -> "Ventanilla           3 ";
-      "Ventanilla           3 " [label="Ventanilla            3 \nCantidad de imágenes:            6 ", shape=box];
+      "Ventanilla           3 " [label="Ventanilla            3 \nCantidad de imágenes:           10 ", shape=box];
      subgraph cluster_3
  {
          label="Pila de Imágenes";
          color=blue;
-          "imagen           0 " [label="ID:            3 \nNombre: B\nIMG_G:            0 \nIMG_P:            3 "];
+          "imagen           0 " [label="ID:            3 \nNombre: M\nIMG_G:            1 \nIMG_P:            0 "];
           "imagen           0 " -> "imagen           1 ";
-          "imagen           1 " [label="ID:            3 \nNombre: B\nIMG_G:            0 \nIMG_P:            3 "];
-      }
-     "Ventanilla           3 " -> "Ventanilla           4 ";
-      "Ventanilla           4 " [label="Ventanilla            4 \nCantidad de imágenes:            8 ", shape=box];
-     subgraph cluster_4
- {
-         label="Pila de Imágenes";
-         color=blue;
-          "imagen           0 " [label="ID:            4 \nNombre: I\nIMG_G:            4 \nIMG_P:            4 "];
-          "imagen           0 " -> "imagen           1 ";
-          "imagen           1 " [label="ID:            4 \nNombre: I\nIMG_G:            4 \nIMG_P:            4 "];
+          "imagen           1 " [label="ID:            3 \nNombre: M\nIMG_G:            1 \nIMG_P:            0 "];
           "imagen           1 " -> "imagen           2 ";
-          "imagen           2 " [label="ID:            4 \nNombre: I\nIMG_G:            4 \nIMG_P:            4 "];
+          "imagen           2 " [label="ID:            3 \nNombre: M\nIMG_G:            1 \nIMG_P:            0 "];
           "imagen           2 " -> "imagen           3 ";
-          "imagen           3 " [label="ID:            4 \nNombre: I\nIMG_G:            4 \nIMG_P:            4 "];
-      }
-     "Ventanilla           4 " -> "Ventanilla           5 ";
-      "Ventanilla           5 " [label="Ventanilla            5 \nCantidad de imágenes:            5 ", shape=box];
-     subgraph cluster_5
- {
-         label="Pila de Imágenes";
-         color=blue;
+          "imagen           3 " [label="ID:            3 \nNombre: M\nIMG_G:            1 \nIMG_P:            0 "];
       }
  }
