@@ -1,0 +1,14 @@
+ digraph arbolb {
+     node [shape=record];
+    nodo10
+ [label="
+10
+|
+20
+|
+30
+"];
+    nodo5
+ [label="
+5
+"];
