@@ -1,6 +1,7 @@
 program main
   use usuario
   use arbolb
+  use arbolavl
   implicit none
   character(len=1) :: opcu
   character(len=100) :: nombre
@@ -8,26 +9,11 @@ program main
   character(len=1) :: opcion
   integer :: esValido
   type(listaUsuarios) :: listadoUsuarios
+  type(BTreeNode) :: arbol 
 
-  call insert(5)
-  call insert(10)
-  call insert(15)
-  call insert(20)
-  call insert(25)
-  call insert(30)
-  call insert(35)
-  call insert(40)
-  call insert(45)
-  call traversal(root)
-  !call graficar_arbolb(root,"Insertar.dot")
-  !call graphTraversal(root, 'arbolb.dot')
-  call generateDotFile( 'arbolb.dot',root)
-  print * , ''
-  call remove(20) ! Por ejemplo, eliminar el valor 20
-  call traversal(root) ! Verificar que se haya eliminado
-  !call graficar_arbolb(root,"Eliminar.dot")
-  !call graphTraversal(root, 'arbolb1.dot')
-  call generateDotFile( 'arbolb1.dot',root)
+  type(avl) :: a
+
+
 
   do 
     print *, ""

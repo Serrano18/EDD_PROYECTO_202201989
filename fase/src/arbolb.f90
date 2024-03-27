@@ -16,10 +16,54 @@ module arbolb
         type(BTreeNode), pointer :: root => null() !PUNTERO PADRE
         contains
         procedure :: insert
+        procedure :: printTree
+        procedure :: createNode
+        procedure :: remove
+        procedure :: graphTree
+        
     end type BTreeNode
 
     
 contains
+
+subroutine graphTree(this)
+    class(BTreeNode), intent(in) :: this
+    integer :: unit, count = 0
+    open(unit, file='btree.dot', status='replace')
+    write(unit, '(A)', advance='no') 'digraph G {'
+    call graphBtree(this%root, unit, count)
+    write(unit, '(A)', advance='no') '}'
+    close(unit)
+    call execute_command_line('dot -Tsvg btree.dot -o btree.svg')
+    call execute_command_line('start btree.svg')
+
+end subroutine graphTree
+
+recursive subroutine graphBtree(myNode, unit, count)
+    type(BTreeNode), pointer, intent(in) :: myNode
+    integer, intent(in) :: unit
+    integer, intent(inout) :: count
+    integer :: i, temp
+    if (associated(myNode)) then
+        count = count + 1
+        write(unit, '(A,I0,A)', advance='no') 'node', count, ' [label="'
+        do i = 1, myNode%num
+            write(unit, '(I0)', advance='no') myNode%val(i)
+            if (i < myNode%num) then
+                write(unit, '(A)', advance='no') '|'
+            end if
+        end do
+        write(unit, '(A)', advance='no') '"];'
+
+        temp = count
+        do i = 0, myNode%num
+            if (associated(myNode%link(i)%ptr)) then
+                write(unit, '(A, I0, A, I0, A)', advance='no') 'node', temp, ' -> node', count + 1, ';'
+                call graphBtree(myNode%link(i)%ptr, unit, count)
+            end if
+        end do
+    end if
+end subroutine graphBtree
 
 subroutine insert(this,val)
     class(BTreeNode), intent(inout) :: this
@@ -28,7 +72,7 @@ subroutine insert(this,val)
     type(BTreeNode), pointer :: child
     allocate(child)
     if (setValue(val, i, this%root, child)) then
-            this%root => createNode(i, child)
+            this%root => this%createNode(i, child)
     end if
 end subroutine insert
 
@@ -124,14 +168,14 @@ subroutine splitNode(val, pval, pos, node, child, newnode)
     node%num = node%num - 1
 end subroutine splitNode
 
-function createNode(this,val, child) result(newNode)
+function createNode(this,valor, child) result(newNode)
     class(BTreeNode), intent(inout) :: this
-    integer, intent(in) :: val
+    integer, intent(in) :: valor
     type(BTreeNode), pointer, intent(in) :: child
     type(BTreeNode), pointer :: newNode
     integer :: i
     allocate(newNode)
-    newNode%val(1) = val
+    newNode%val(1) = valor
     newNode%num = 1
     newNode%link(0)%ptr => this%root
     newNode%link(1)%ptr => child
@@ -162,131 +206,109 @@ recursive subroutine traversal(myNode)
     end if
 end subroutine traversal
 
-subroutine remove(this, val )
+subroutine remove(this,val)
     class(BTreeNode), intent(inout) :: this
-    integer , intent(in) :: val
-    call deleteValue(this%root, val)
+    integer, intent(in) :: val
+    logical :: isDeleted
+    if (.not. associated(this%root)) then
+        print *, "Empty tree"
+        return
+    end if
+    call deleteValue(val, this%root, isDeleted)
+    if (isDeleted .and. this%root%num == 0) then
+        if (associated(this%root%link(0)%ptr)) then
+            this%root => this%root%link(0)%ptr
+        end if
+    end if
 end subroutine remove
 
-recursive subroutine deleteValue(node, val)
-    type(BTreeNode), pointer, intent(inout) :: node
+recursive subroutine deleteValue(val, node, isDeleted)
     integer, intent(in) :: val
-    integer :: i, j
-    if (associated(node)) then
-            i = 1
-            do while (i <= node%num .and. val > node%val(i))
-                i = i + 1
-            end do
-            if (i <= node%num .and. val == node%val(i)) then
-                if (.not. associated(node%link(i-1)%ptr)) then
-                    do j = i + 1, node%num
-                        node%val(j-1) = node%val(j)
-                        node%link(j-1)%ptr => node%link(j)%ptr
-                    end do
-                    node%num = node%num - 1
-                else
-                    call restore(node, i)
-                end if
-            else
-                call delete(node%link(i-1)%ptr, val)
-            end if
-    else
-            print *, "Client not found"
+    type(BTreeNode), pointer, intent(inout) :: node
+    logical, intent(out) :: isDeleted
+    integer :: pos, successorVal
+
+    isDeleted = .false.
+
+    if (.not. associated(node)) then
+        return
     end if
+
+    pos = findPosition(val, node)
+
+    if (pos > 0) then
+        if (associated(node%link(pos-1)%ptr)) then
+            call getPredecessor(node%link(pos-1)%ptr, successorVal)
+            node%val(pos) = successorVal
+            call deleteValue(successorVal, node%link(pos-1)%ptr, isDeleted)
+            if (.not. isDeleted) then
+                return
+            end if
+        end if
+    else
+        pos = -pos
+        call deleteValue(val, node%link(pos)%ptr, isDeleted)
+        if (.not. isDeleted) then
+            return
+        end if
+    end if
+
+    if (isDeleted) then
+        if (pos > 0) then
+            call removeEntry(pos, node)
+        else
+            pos = -pos
+            call getPredecessor(node%link(pos)%ptr, successorVal)
+            node%val(pos) = successorVal
+            call deleteValue(successorVal, node%link(pos)%ptr, isDeleted)
+            if (.not. isDeleted) then
+                return
+            end if
+        end if
+    end if
+
+    isDeleted = .true.
 end subroutine deleteValue
 
-subroutine restore(myNode, pos)
-    type(BTreeNode), pointer, intent(inout) :: myNode
-    integer, intent(in) :: pos
-    type(BTreeNode), pointer :: q
-    q => myNode%link(pos-1)%ptr
-    if (q%num > MINI) then
-            do while (associated(q%link(q%num)%ptr))
-                q => q%link(q%num)%ptr
-            end do
-            myNode%val(pos) = q%val(q%num)
-            q%num = q%num - 1
-    else
-            call combine(myNode, pos)
-    end if
-end subroutine restore
-
-subroutine combine(myNode, pos)
-    type(BTreeNode), pointer, intent(inout) :: myNode
-    integer, intent(in) :: pos
-    type(BTreeNode), pointer :: q, r
-    integer :: i
-    q => myNode%link(pos-1)%ptr
-    r => myNode%link(pos)%ptr
-    q%num = q%num + 1
-    q%val(q%num) = myNode%val(pos)
-    q%link(q%num)%ptr => r%link(0)%ptr
-    do i = 1, r%num
-            q%num = q%num + 1
-            q%val(q%num) = r%val(i)
-            q%link(q%num)%ptr => r%link(i)%ptr
-    end do
-    do i = pos, myNode%num-1
-            myNode%val(i) = myNode%val(i+1)
-            myNode%link(i)%ptr => myNode%link(i+1)%ptr
-    end do
-    myNode%num = myNode%num - 1
-    deallocate(r)
-end subroutine combine
-
-subroutine generateDotFile(filename, node)
-    character(len=*), intent(in) :: filename
+! Función para encontrar la posición de un valor en un nodo
+integer function findPosition(val, node)
+    integer, intent(in) :: val
     type(BTreeNode), intent(in) :: node
-    integer :: unit, count=0
-    ! Abrir el archivo DOT para escribir
-    open(newunit=unit, file=filename, status='replace', action='write')
+    integer :: i
 
-    ! Escribir el encabezado del archivo DOT
-    write(unit, '(A)') 'digraph G {'
-
-    ! Llamar a la función de generación del contenido del árbol
-    call generateDotContent(node%root,unit,count)
-
-    ! Escribir el cierre del archivo DOT
-    write(unit, '(A)') '}'
-
-    ! Cerrar el archivo DOT
-    close(unit)
-
-    
-    ! Convertir el archivo DOT a SVG
-    call execute_command_line('dot -Tsvg ' // trim(filename) // ' > img/btree.svg')
-    ! Abrir el archivo SVG en un visor de imágenes
-    call execute_command_line('eog img/btree.svg')
-end subroutine generateDotFile
-
-recursive subroutine generateDotContent(node,unit, count)
-    integer, intent(in) :: unit
-    integer, intent(inout) :: count
-    type(BTreeNode), pointer, intent(in) :: node
-    integer :: i, temp
-
-    ! Si el nodo es nulo, no hay nada que graficar
-    if (associated(node)) return
-        count = count + 1
-        write(unit,'(A,I0,A)') 'node',count,'[label="'
-        do i = 1, node%num
-            write(unit, '(I0)') node%val(i)
-            if (i < node%num) then
-                write(unit, '(A)') '|'
-            end if
-        end do
-        write(unit, '(A)') '"];'
-    ! Escribir el nodo actual
-    temp = count
-    ! Llamar a la función recursivamente para los nodos hijos
-    do i = 0, node%num
-        if (associated(node)) then
-            write(unit,'(A,I0,A,I0,A)') 'node', temp, ' -> node', count + 1,';'
-            call generateDotContent (node,unit,count)
+    findPosition = 0
+    do i = 1, node%num
+        if (val == node%val(i)) then
+            findPosition = i
+            return
+        else if (val < node%val(i)) then
+            findPosition = -i
+            return
         end if
     end do
-end subroutine generateDotContent
+end function findPosition
 
+! Subrutina para obtener el predecesor de un nodo
+subroutine getPredecessor(node, predecessorVal)
+    type(BTreeNode), pointer :: node
+    integer, intent(out) :: predecessorVal
+    do while (associated(node%link(node%num)%ptr))
+        node => node%link(node%num)%ptr
+    end do
+    predecessorVal = node%val(node%num)
+end subroutine getPredecessor
+
+! Subrutina para eliminar una entrada de un nodo
+subroutine removeEntry(pos, node)
+    integer, intent(in) :: pos
+    type(BTreeNode), pointer, intent(inout) :: node
+    integer :: i
+    do i = pos, node%num-1
+        node%val(i) = node%val(i+1)
+        node%link(i)%ptr => node%link(i+1)%ptr
+    end do
+    node%link(node%num)%ptr => null()
+    node%num = node%num - 1
+end subroutine removeEntry
 
 end module arbolb

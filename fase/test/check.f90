@@ -5,6 +5,22 @@ program check
   character(len=15) :: dpi, password
   character(len=1) :: opcion
   type(listaUsuarios) :: listadoUsuarios
+  call arbol%insert(5)
+  call  arbol%insert(10)
+  call arbol%insert(15)
+  call  arbol%insert(20)
+  call  arbol%insert(25)
+  call  arbol%insert(30)
+  call  arbol%insert(35)
+  call arbol%insert(40)
+  call arbol%insert(45)
+    ! Generar un archivo DOT y convertirlo a SVG
+  call arbol%printTree()
+  print * , ''
+  call arbol%remove(20) ! Por ejemplo, eliminar el valor 20
+  call arbol%graphTree()
+  call arbol%printTree()
+ 
     do 
       print *, ""
       
