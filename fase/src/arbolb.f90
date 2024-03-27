@@ -1,16 +1,17 @@
 module arbolb
+    use usuario, only: User
 
     implicit none
     
-      	! Order 4
-    integer, parameter :: MAXI = 3, MINI = 1 
+      	! Order 5
+    integer, parameter :: MAXI = 4, MINI = 2 
 
     type nodeptr
         type (BTreeNode), pointer :: ptr => null()
     end type nodeptr
 
     type BTreeNode
-        integer :: val(0:MAXI+1)
+        type(User) :: val(0:MAXI+1) !arr de usuarios
         integer :: num = 0
         type(nodeptr) :: link(0:MAXI+1)
         type(BTreeNode), pointer :: root => null() !PUNTERO PADRE
@@ -20,7 +21,8 @@ module arbolb
         procedure :: createNode
         procedure :: remove
         procedure :: graphTree
-        
+        procedure :: searchUser
+        procedure :: searchUserByNameAndPassword
     end type BTreeNode
 
     
@@ -48,7 +50,7 @@ recursive subroutine graphBtree(myNode, unit, count)
         count = count + 1
         write(unit, '(A,I0,A)', advance='no') 'node', count, ' [label="'
         do i = 1, myNode%num
-            write(unit, '(I0)', advance='no') myNode%val(i)
+            write(unit, '(I0,A,A)', advance='no') myNode%val(i)%dpi, ',', trim(myNode%val(i)%nombre)
             if (i < myNode%num) then
                 write(unit, '(A)', advance='no') '|'
             end if
@@ -65,20 +67,21 @@ recursive subroutine graphBtree(myNode, unit, count)
     end if
 end subroutine graphBtree
 
-subroutine insert(this,val)
+subroutine insert(this,users)
     class(BTreeNode), intent(inout) :: this
-    integer, intent(in) :: val
-    integer :: i
+    type(User), intent(in) :: users
+    type(User) :: i
     type(BTreeNode), pointer :: child
     allocate(child)
-    if (setValue(val, i, this%root, child)) then
+    if (setValue(users, i, this%root, child)) then
             this%root => this%createNode(i, child)
     end if
+    
 end subroutine insert
 
-recursive function setValue(val, pval, node, child) result(res)
-    integer, intent(in) :: val
-    integer, intent(inout) :: pval
+recursive function setValue(users,pusers, node, child) result(res)
+    type(User),  intent(in) :: users
+    type(User),  intent(inout) :: pusers
     type(BTreeNode), pointer, intent(inout) :: node
     type(BTreeNode), pointer, intent(inout) :: child
     type(BTreeNode), pointer :: newnode        
@@ -86,29 +89,29 @@ recursive function setValue(val, pval, node, child) result(res)
     logical :: res
     allocate(newnode)
     if (.not. associated(node)) then            
-            pval = val
+            pusers = users
             child => null()
             res = .true.
             return
     end if
-    if (val < node%val(1)) then
+    if (users%dpi < node%val(1)%dpi) then
             pos = 0
     else
             pos = node%num
-            do while (val < node%val(pos) .and. pos > 1) 
+            do while (users%dpi < node%val(pos)%dpi .and. pos > 1) 
             pos = pos - 1
             end do
-            if (val == node%val(pos)) then
+            if (users%dpi == node%val(pos)%dpi) then
                 print *, "Duplicates are not permitted"
                 res = .false.
                 return
             end if
     end if
-    if (setValue(val, pval, node%link(pos)%ptr, child)) then
+    if (setValue(users, pusers, node%link(pos)%ptr, child)) then
             if (node%num < MAXI) then
-                call insertNode(pval, pos, node, child)
+                call insertNode(pusers, pos, node, child)
             else
-                call splitNode(pval, pval, pos, node, child, newnode)
+                call splitNode(pusers, pusers, pos, node, child, newnode)
                 child => newnode
                 res = .true.
             return
@@ -117,8 +120,9 @@ recursive function setValue(val, pval, node, child) result(res)
     res = .false.
 end function setValue
 
-subroutine insertNode(val, pos, node, child)
-    integer, intent(in) :: val, pos
+subroutine insertNode(users, pos, node, child)
+    type(User), intent(in) :: users
+    integer, intent(in) :: pos
     type(BTreeNode), pointer, intent(inout) :: node
     type(BTreeNode), pointer, intent(in) :: child
     integer :: j
@@ -128,14 +132,15 @@ subroutine insertNode(val, pos, node, child)
             node%link(j + 1)%ptr => node%link(j)%ptr
             j = j - 1
     end do
-    node%val(j + 1) = val
+    node%val(j + 1) = users
     node%link(j + 1)%ptr => child
     node%num = node%num + 1
 end subroutine insertNode
 
-subroutine splitNode(val, pval, pos, node, child, newnode)
-    integer, intent(in) :: val, pos
-    integer, intent(inout) :: pval
+subroutine splitNode(users, pusers, pos, node, child, newnode)
+    type(User), intent(in) :: users
+    integer, intent(in) :: pos
+    type(User), intent(inout) :: pusers
     type(BTreeNode), pointer, intent(inout) :: node,  newnode
     type(BTreeNode), pointer, intent(in) ::  child
     integer :: median, i, j
@@ -159,23 +164,23 @@ subroutine splitNode(val, pval, pos, node, child, newnode)
     node%num = median
     newnode%num = MAXI - median
     if (pos <= MINI) then
-            call insertNode(val, pos, node, child)
+            call insertNode(users, pos, node, child)
     else
-            call insertNode(val, pos - median, newnode, child)
+            call insertNode(users, pos - median, newnode, child)
     end if        
-    pval = node%val(node%num)        
+    pusers = node%val(node%num)        
     newnode%link(0)%ptr => node%link(node%num)%ptr
     node%num = node%num - 1
 end subroutine splitNode
 
-function createNode(this,valor, child) result(newNode)
+function createNode(this,users, child) result(newNode)
     class(BTreeNode), intent(inout) :: this
-    integer, intent(in) :: valor
+    type(User), intent(in) :: users
     type(BTreeNode), pointer, intent(in) :: child
     type(BTreeNode), pointer :: newNode
     integer :: i
     allocate(newNode)
-    newNode%val(1) = valor
+    newNode%val(1) = users
     newNode%num = 1
     newNode%link(0)%ptr => this%root
     newNode%link(1)%ptr => child
@@ -196,7 +201,7 @@ recursive subroutine traversal(myNode)
             write (*, '(A)', advance='no') ' [ '
             i = 0
             do while (i < myNode%num)
-                write (*,'(1I3)', advance='no') myNode%val(i+1)
+                write (*,'(1I3)', advance='no') myNode%val(i+1)%dpi
                 i = i + 1
             end do
             do i = 0, myNode%num
@@ -206,15 +211,74 @@ recursive subroutine traversal(myNode)
     end if
 end subroutine traversal
 
-subroutine remove(this,val)
+function searchUser(this, dpi) result(users)
     class(BTreeNode), intent(inout) :: this
-    integer, intent(in) :: val
+    integer(kind=8), intent(in) :: dpi
+    type(User), pointer :: users
+    users => search(this%root, dpi)
+end function searchUser
+
+recursive function search(myNode, dpi) result(users)
+    type(BTreeNode), pointer, intent(inout) :: myNode
+    integer(kind=8), intent(in) :: dpi
+    type(User), pointer :: users
+    integer :: i
+    if (associated(myNode)) then
+            i = 1
+            do while (i <= myNode%num .and. dpi > myNode%val(i)%dpi)
+                i = i + 1
+            end do
+            if (i <= myNode%num .and. dpi == myNode%val(i)%dpi) then
+                print *, "Usuario encontrado : ", myNode%val(i)%nombre
+                users => myNode%val(i)
+            else
+                users => search(myNode%link(i-1)%ptr, dpi)
+            end if
+    else
+            print *, "Usuario no encontrado"
+            users => null()
+    end if
+end function search
+function searchUserByNameAndPassword(this, nombre, pass) result(users)
+    class(BTreeNode), intent(inout) :: this
+    character(len=*), intent(in) :: nombre
+    character(len=*), intent(in) :: pass
+    type(User), pointer :: users
+    users => searchByNameAndPassword(this%root, nombre, pass)
+end function searchUserByNameAndPassword
+
+recursive function searchByNameAndPassword(myNode, nombre, pass) result(users)
+    type(BTreeNode), pointer, intent(inout) :: myNode
+    character(len=*), intent(in) :: nombre
+    character(len=*), intent(in) :: pass
+    type(User), pointer :: users
+    integer :: i
+    if (associated(myNode)) then
+        i = 1
+        do while (i <= myNode%num .and. nombre /= myNode%val(i)%nombre .or. pass /= myNode%val(i)%password)
+            i = i + 1
+        end do
+        if (i <= myNode%num .and. nombre == myNode%val(i)%nombre .and. pass == myNode%val(i)%password) then
+            print *, "Usuario encontrado: ", myNode%val(i)%nombre
+            users => myNode%val(i)
+        else
+            users => searchByNameAndPassword(myNode%link(i-1)%ptr, nombre, pass)
+        end if
+    else
+        print *, "Usuario no encontrado"
+        users => null()
+    end if
+end function searchByNameAndPassword
+
+subroutine remove(this,dpi)
+    class(BTreeNode), intent(inout) :: this
+    integer(kind=8), intent(in) :: dpi
     logical :: isDeleted
     if (.not. associated(this%root)) then
         print *, "Empty tree"
         return
     end if
-    call deleteValue(val, this%root, isDeleted)
+    call deleteValue(dpi, this%root, isDeleted)
     if (isDeleted .and. this%root%num == 0) then
         if (associated(this%root%link(0)%ptr)) then
             this%root => this%root%link(0)%ptr
@@ -223,10 +287,11 @@ subroutine remove(this,val)
 end subroutine remove
 
 recursive subroutine deleteValue(val, node, isDeleted)
-    integer, intent(in) :: val
+    integer(kind=8), intent(in):: val
     type(BTreeNode), pointer, intent(inout) :: node
     logical, intent(out) :: isDeleted
-    integer :: pos, successorVal
+    integer :: pos
+    integer(kind=8) :: successorVal
 
     isDeleted = .false.
 
@@ -239,7 +304,7 @@ recursive subroutine deleteValue(val, node, isDeleted)
     if (pos > 0) then
         if (associated(node%link(pos-1)%ptr)) then
             call getPredecessor(node%link(pos-1)%ptr, successorVal)
-            node%val(pos) = successorVal
+            node%val(pos)%dpi = successorVal
             call deleteValue(successorVal, node%link(pos-1)%ptr, isDeleted)
             if (.not. isDeleted) then
                 return
@@ -259,7 +324,7 @@ recursive subroutine deleteValue(val, node, isDeleted)
         else
             pos = -pos
             call getPredecessor(node%link(pos)%ptr, successorVal)
-            node%val(pos) = successorVal
+            node%val(pos)%dpi = successorVal
             call deleteValue(successorVal, node%link(pos)%ptr, isDeleted)
             if (.not. isDeleted) then
                 return
@@ -272,16 +337,16 @@ end subroutine deleteValue
 
 ! Función para encontrar la posición de un valor en un nodo
 integer function findPosition(val, node)
-    integer, intent(in) :: val
+    integer(kind=8), intent(in):: val
     type(BTreeNode), intent(in) :: node
     integer :: i
 
     findPosition = 0
     do i = 1, node%num
-        if (val == node%val(i)) then
+        if (val == node%val(i)%dpi) then
             findPosition = i
             return
-        else if (val < node%val(i)) then
+        else if (val < node%val(i)%dpi) then
             findPosition = -i
             return
         end if
@@ -291,11 +356,11 @@ end function findPosition
 ! Subrutina para obtener el predecesor de un nodo
 subroutine getPredecessor(node, predecessorVal)
     type(BTreeNode), pointer :: node
-    integer, intent(out) :: predecessorVal
+    integer(kind=8), intent(out) :: predecessorVal
     do while (associated(node%link(node%num)%ptr))
         node => node%link(node%num)%ptr
     end do
-    predecessorVal = node%val(node%num)
+    predecessorVal = node%val(node%num)%dpi
 end subroutine getPredecessor
 
 ! Subrutina para eliminar una entrada de un nodo

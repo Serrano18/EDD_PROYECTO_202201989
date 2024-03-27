@@ -1,1 +1,1 @@
-digraph G {node1 [label="10|30"];node1 -> node2;node2 [label="5"];node1 -> node3;node3 [label="15"];node1 -> node4;node4 [label="35|40|45"];}
+digraph G {node8 [label="1234567890,Maria"];node8 -> node9;node9 [label="123456,cliente 3|456237,pepe|987654321,cliente 4"];node8 -> node10;node10 [label="1234567890123,AUX EDD|6745567890123,cliente 2"];}

@@ -215,12 +215,12 @@ contains
         dot_filename = trim(filename) // ".dot"
         png_filename = trim(filename) // ".png"
         
-        open(10, file="graph/"//dot_filename, status='replace', action='write')
+        open(10, file=dot_filename, status='replace', action='write')
         write(10, '(A)') trim(code)
         close(10)
 
         ! Genera la imagen PNG
-        call system("dot -Tpng graph/"// dot_filename //" -o graph/" // png_filename)
+        call system("dot -Tpng "// dot_filename //" -o " // png_filename)
     end subroutine write_dot
 
     function get_address_memory(node) result(address)
