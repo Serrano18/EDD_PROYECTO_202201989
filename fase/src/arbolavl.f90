@@ -4,10 +4,11 @@ module arbolavl
     implicit none
 
     type :: Imagen
+    private
         integer :: id
         type(abbid) :: arbolIdCapas
         contains
-        procedure :: setId
+        procedure :: setIdImg
         procedure :: getId
         procedure :: agregarNodoIdCapas
     end type Imagen
@@ -27,7 +28,6 @@ module arbolavl
         procedure :: deleteavl
         procedure :: preorden
         procedure :: graficar
-        procedure :: graficarac
     end type avl
 
 contains
@@ -37,11 +37,11 @@ contains
         call this%arbolIdCapas%add(value)
     end subroutine agregarNodoIdCapas
 
-    subroutine setId(this, newId)
+    subroutine setIdImg(this, newId)
         class(Imagen), intent(inout) :: this
         integer, intent(in) :: newId
         this%id = newId
-    end subroutine setId
+    end subroutine setIdImg
 
     function getId(this) result(id)
         class(Imagen), intent(in) :: this
@@ -52,7 +52,6 @@ contains
     subroutine insertavl(self, val)
         class(avl), intent(inout) :: self
         type(Imagen), intent(in) :: val
-
         call insertRec(self%raiz, val)
     end subroutine insertavl
 
@@ -303,65 +302,4 @@ contains
         end if
     end subroutine graficar
 
-    
-    recursive subroutine imprimirRec2(raiz, nombre, io,img)
-        type(nodo), pointer, intent(in) :: raiz
-        character(len=36), intent(in) :: nombre
-        integer,intent(in) :: img
-        integer :: io
-
-        character(len=36) :: derecha
-        character(len=36) :: izquierda
-
-        derecha = generate_uuid()
-        izquierda = generate_uuid()
-
-        if(associated(raiz)) then
-            !"Nodo_uuid"[Label="1"]
-            write(io, *) '"Nodo'//nombre//'"[label= "', raiz%valor%id, '"]'
-            if(raiz%valor%id == img)then
-                write(io, '(A,I0,A)') '  "', nombre, '" [color=red];'
-                write(io, '(A,I0,A,I0,A)') '  "', nombre, '" -> "', raiz%valor%arbolIdCapas%root%uid, '";'
-                call raiz%valor%arbolIdCapas%dotgen_rec(raiz%valor%arbolIdCapas%root, io)
-            end if
-            if(associated(raiz%izquierda)) then
-                !"Nodo_uuid"->"Nodo_uuidHijoIzquierdo"
-                write(io, *) '"Nodo'//nombre//'"->"Nodo'//izquierda//'"'
-            end if
-
-            if(associated(raiz%derecha)) then
-                !"Nodo_uuid"->"Nodo_uuidHijoDerecho"
-                write(io, *) '"Nodo'//nombre//'"->"Nodo'//derecha//'"'
-            end if
-            call imprimirRec(raiz%izquierda, izquierda, io)
-            call imprimirRec(raiz%derecha, derecha, io)
-        end if
-    end subroutine imprimirRec2
-
-    subroutine graficarac(self,img)
-        class(avl), intent(in) :: self
-        integer :: io
-        integer :: i
-        character(len=100) :: comando
-        integer,intent(in) :: img
-        io = 1
-        open(newunit=io, file="./avl_tree_layer.dot")
-        comando = "dot -Tpng ./avl_tree_layer.dot -o ./avl_tree_layer.png"
-
-        write(io, *) "digraph G {"
-            !Graficar
-        if(associated(self%raiz)) then
-            call imprimirRec2(self%raiz, generate_uuid(), io,img)
-        end if
-        write(io, *) "}"
-        close(io)
-
-        call execute_command_line(comando, exitstat=i)
-
-        if(i == 1) then
-            print *, "Error al momento de crear la imagen"
-        else
-            print *, "La imagen fue generada exitosamente"
-        end if
-    end subroutine graficarac
 end module arbolavl

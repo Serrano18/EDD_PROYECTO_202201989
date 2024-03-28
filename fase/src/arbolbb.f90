@@ -1,5 +1,4 @@
 module arbolbb
-    
     use listadoPixeles
     implicit none
     type, public :: capas
@@ -21,12 +20,13 @@ module arbolbb
         type(Node_t), pointer :: root => null()
 
     contains
-        procedure :: insert
+        procedure :: insertabb
         procedure :: delete
         procedure :: preorder
         procedure :: inorder
         procedure :: posorder
         procedure :: graph
+
     end type abb
 
 contains   
@@ -49,7 +49,7 @@ contains
         id = this%id
     end function getId
     !Subrutinas del tipo abb
-    subroutine insert(self, val)
+    subroutine insertabb(self, val)
         class(abb), intent(inout) :: self
         type(capas), intent(in) :: val
 
@@ -59,7 +59,7 @@ contains
         else
             call insertRec(self%root, val)
         end if
-    end subroutine insert
+    end subroutine insertabb
     recursive subroutine insertRec(root, val)
         type(Node_t), pointer, intent(inout) :: root
         type(capas) , intent(in) :: val

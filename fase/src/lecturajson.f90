@@ -1,11 +1,10 @@
 module lecturajson
     use json_module
-    use arbolavl
-    use usuario, only: User
-    use arbolb, only:BTreeNode
+    use usuario
+    use arbolb
     use arbolbb
     use listadoPixeles
-
+    use arbolavl
     use json_module, ik => json_ik
     implicit none
         type(json_file) :: json
@@ -123,8 +122,7 @@ module lecturajson
                         end do
                     end if
                 end if
-
-                call tree%insert(temp_capa)
+                call tree%insertabb(temp_capa)
             end do
         end subroutine cargaMasivaCapas
         
@@ -145,7 +143,7 @@ module lecturajson
                     if (found) then
                         call jsonc%get(caracP, tempStr)
                         num = convert_to_integer2(tempStr)
-                        call temp_image%setId(num)
+                        call temp_image%setIdImg(num)
                     end if
         
                     call jsonc%get_child(tempP, 'capas', caracP, found=found)
@@ -162,7 +160,7 @@ module lecturajson
         
             call destroy_json()
         end subroutine cargaMasivaImagenes
-        
+
         function convert_to_integer2(str) result(num)
             character(len=*), intent(in) :: str
             integer :: num

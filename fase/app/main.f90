@@ -217,7 +217,7 @@ program main
                case ('3')
                 write(*, '(A)') "Ingrese el id de la Imagen a observar"
                 read *, imgseleccionada
-                call usuarioActual%arbolDeImagenes%graficarac(imgseleccionada)
+                !call usuarioActual%arbolDeImagenes%graficarac(imgseleccionada)
                case ('4')
  
                case ('5')
