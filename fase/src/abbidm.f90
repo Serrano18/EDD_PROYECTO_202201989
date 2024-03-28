@@ -212,12 +212,12 @@ module abbidm
             if (.not. associated(tmp)) then
                     return
                 end if
-            write (unit, '(A,I5,A,I5,A)') ' l', tmp%uid, ' [label="', tmp%value, '"];'
+            write (unit, '(A,I0,A,I0,A)') ' l', tmp%uid, ' [label="', tmp%value, '"];'
             if (associated(tmp%left)) then
-                    write (unit, '(A,I5,A,I5,A)') ' l', tmp%uid, ' -- l', tmp%left%uid, ';'
+                    write (unit, '(A,I0,A,I0,A)') ' l', tmp%uid, ' -> l', tmp%left%uid, ';'
                 end if
             if (associated(tmp%right)) then
-                    write (unit, '(A,I5,A,I5,A)') ' l', tmp%uid, ' -- l', tmp%right%uid, ';'
+                    write (unit, '(A,I0,A,I0,A)') ' l', tmp%uid, ' -> l', tmp%right%uid, ';'
                 end if
             call this%dotgen_rec(tmp%left, unit)
                 call this%dotgen_rec(tmp%right, unit)

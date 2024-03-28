@@ -28,6 +28,7 @@ module arbolavl
         procedure :: deleteavl
         procedure :: preorden
         procedure :: graficar
+        procedure :: graficarArbolDeCapasDeImagen
     end type avl
 
 contains
@@ -282,8 +283,8 @@ contains
         character(len=100) :: comando
 
         io = 1
-        open(newunit=io, file="./avl_tree.dot")
-        comando = "dot -Tpng ./avl_tree.dot -o ./avl_tree.png"
+        open(newunit=io, file="./ArbolImagenes.dot")
+        comando = "dot -Tpng ./ArbolImagenes.dot -o ./ArbolImagenes.png"
 
         write(io, *) "digraph G {"
             !Graficar
@@ -302,4 +303,65 @@ contains
         end if
     end subroutine graficar
 
+    subroutine graficarArbolDeCapasDeImagen(self,img)
+        class(avl), intent(in) :: self
+        integer,intent(in) :: img
+        integer :: io
+        integer :: i
+        character(len=100) :: comando
+
+        io = 1
+        open(newunit=io, file="./ArbolImagenyCapas.dot")
+        comando = "dot -Tpng ./ArbolImagenyCapas.dot -o ./ArbolImagenyCapas.png"
+
+        write(io, *) "digraph G {"
+            !Graficar
+        if(associated(self%raiz)) then
+            call imprimirRec2(self%raiz, generate_uuid(), io,img)
+        end if
+        write(io, *) "}"
+        close(io)
+
+        call execute_command_line(comando, exitstat=i)
+
+        if(i == 1) then
+            print *, "Error al momento de crear la imagen"
+        else
+            print *, "La imagen fue generada exitosamente"
+        end if
+    end subroutine graficarArbolDeCapasDeImagen
+    
+    recursive subroutine imprimirRec2(raiz, nombre, io,img)
+        type(nodo), pointer, intent(in) :: raiz
+        character(len=36), intent(in) :: nombre
+        integer,intent(in) :: img
+        integer :: io
+
+        character(len=36) :: derecha
+        character(len=36) :: izquierda
+
+        derecha = generate_uuid()
+        izquierda = generate_uuid()
+
+        if(associated(raiz)) then
+            !"Nodo_uuid"[Label="1"]
+            write(io, *) '"Nodo'//nombre//'"[label= "', raiz%valor%id, '"]'
+            if(raiz%valor%id == img) then
+                write(io,'(A,A,I0)') '"Nodo'//nombre, '"  ->  l',raiz%valor%arbolIdCapas%root%uid
+                call raiz%valor%arbolIdCapas%dotgen_rec(raiz%valor%arbolIdCapas%root,io)
+            end if
+
+            if(associated(raiz%izquierda)) then
+                !"Nodo_uuid"->"Nodo_uuidHijoIzquierdo"
+                write(io, *) '"Nodo'//nombre//'"->"Nodo'//izquierda//'"'
+            end if
+
+            if(associated(raiz%derecha)) then
+                !"Nodo_uuid"->"Nodo_uuidHijoDerecho"
+                write(io, *) '"Nodo'//nombre//'"->"Nodo'//derecha//'"'
+            end if
+            call imprimirRec2(raiz%izquierda, izquierda, io,img)
+            call imprimirRec2(raiz%derecha, derecha, io,img)
+        end if
+    end subroutine imprimirRec2
 end module arbolavl

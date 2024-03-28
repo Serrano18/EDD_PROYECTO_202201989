@@ -70,19 +70,19 @@ program main
 
   contains
 
-  function esNumero(cadena) result(esEntero)
-    character(len=*), intent(in) :: cadena
-    logical :: esEntero
-    integer(kind=8) :: valor,iostat
+    function esNumero(cadena) result(esEntero)
+      character(len=*), intent(in) :: cadena
+      logical :: esEntero
+      integer(kind=8) :: valor,iostat
 
-    ! Intentar convertir la cadena en un entero
-    read(cadena, *, IOSTAT=iostat) valor
-    if (iostat /= 0) then
-        esEntero = .false. ! La conversión falló
-    else
-        esEntero = .true.  ! La conversión fue exitosa
-    end if
-  end function esNumero
+      ! Intentar convertir la cadena en un entero
+      read(cadena, *, IOSTAT=iostat) valor
+      if (iostat /= 0) then
+          esEntero = .false. ! La conversión falló
+      else
+          esEntero = .true.  ! La conversión fue exitosa
+      end if
+    end function esNumero
 
     subroutine menuUsers ()
       character(len=1) :: opcu
@@ -217,7 +217,7 @@ program main
                case ('3')
                 write(*, '(A)') "Ingrese el id de la Imagen a observar"
                 read *, imgseleccionada
-                !call usuarioActual%arbolDeImagenes%graficarac(imgseleccionada)
+                call usuarioActual%arbolDeImagenes%graficarArbolDeCapasDeImagen(imgseleccionada)
                case ('4')
  
                case ('5')
@@ -228,7 +228,7 @@ program main
                  print *, "Opcion no valida. Por favor, intente de nuevo."
                end select   
          end do
-     end subroutine menuestructuras
+    end subroutine menuestructuras
  
     subroutine agregarUsuario ()
       write(*, '(A)') "-----------------------------------------"
