@@ -1,8 +1,7 @@
 program main
   use usuario
   use arbolb
-  use arbolavl
-  use arbolbb
+
   use lecturajson
   implicit none
   type(User) :: nuevoCliente
@@ -14,8 +13,6 @@ program main
   character(len=1) :: opcion
   integer :: esValido
   type(BTreeNode) :: Usuarios
-  type(avl) :: a
-  type(abb) :: tree
   character (len=256 ) :: archivo
 
   do 
@@ -35,7 +32,7 @@ program main
         ! Aquí iría el código para guardar los datos del usuario en alguna estructura de datos,
         call agregarUsuario()
       case('2')
-        call Usuarios%graphTree()
+        
         write(*, '(A)') "------------------------------------------"
         write(*,'(A)') "             INICIO DE USUARIO             "
         write(*, '(A)') "------------------------------------------"
@@ -44,8 +41,6 @@ program main
         write(*, '(A)') "Ingrese password:"
         read (*,'(A)') password
         write(*, '(A)') "------------------------------------------"
-        ! Aquí iría el código para validar si es usuario o administrador y mandarlo a donde corresponde
-        
         ! Redirigir al usuario según el resultado de la validación
         if (nombre == "admin" .and. password == "EDD2024") then
             write(*, '(A)') "Bienvenido a Pixel Print Studio Administrador"
@@ -96,18 +91,30 @@ program main
         write(*, '(A)') "|-----------------------------------------|"
         write(*, '(A)') "|     Bienvenido a Pixel Print Studio     |"
         write(*, '(A)') "|-----------------------------------------|"
-        write(*, '(A)') "| 1. Reportes de Estructuras              |"              
+        write(*, '(A)') "| 1. Estructuras                          |"                
         write(*, '(A)') "| 2. Navegación y gestión de imágenes     |"  
-        write(*, '(A)') "| 3. Cargas Masivas                       |"
-        write(*, '(A)') "| 4. Cerrar Sesion                        |"  
+        write(*, '(A)') "| 3. Carga Masiva de Capas                |"
+        write(*, '(A)') "| 4. Carga Masiva de Imagenes             |"
+        write(*, '(A)') "| 5. Cargas Masiva de Álbumes             |"
+        write(*, '(A)') "| 6. Cerrar Sesion                        |"  
         write(*, '(A)') "|-----------------------------------------|"
         write(*, '(A)') "Ingrese el numero de opcion"
           read *, opcu
           select case (opcu)
           case ('1')
+            call menuestructuras()
           case ('2')
           case ('3')
+            !Codigo para la carga de capas
+            print *, "Ingrese el nombre del Archivo de Capas: "
+            read *, archivo
+            call cargaMasivaCapas(archivo,usuarioActual%arbolDeCapas)
           case ('4')
+            print *, "Ingrese el nombre del Archivo de Imagenes: "
+            read *, archivo
+            call cargaMasivaImagenes(archivo,usuarioActual%arbolDeImagenes)
+          case ('5')
+          case ('6')
             print *, "Gracias por tu visita"
             exit
           case default
@@ -118,6 +125,7 @@ program main
 
     subroutine menuAdmin ()
      character(len=1) :: opca
+     character(len=1) :: op
         do 
             print *, "" 
             write(*, '(A)') "|-----------------------------------------|"
@@ -134,11 +142,43 @@ program main
               read *, opca
               select case (opca)
               case ('1')
+                call Usuarios%graphTree()
               case ('2')
+                write(*, '(A)') "|---------------------------------------------|"
+                write(*, '(A)') "|                Crear Usuario                |"
+                write(*, '(A)') "|---------------------------------------------|"
                 call agregarUsuario()
               case ('3')
+                write(*, '(A)') "|---------------------------------------------|"
+                write(*, '(A)') "|              Modificar Usuario              |"
+                write(*, '(A)') "|---------------------------------------------|"
+                write(*, '(A)') "Ingrese el dpi del Usuario a Modificar"
+                read *, dpi
+                usuarioActual => Usuarios%searchUser(dpi)
+                if (associated(usuarioActual)) then
+                  write(*, '(A)') "Desea Modificar el Nombre del usuario [s/n]"
+                  read *, op
+                  if(op=='s'.or. op=='S') then
+                    write(*, '(A)') "Ingrese Nombre Nuevo"
+                    read (*,'(A)') nombre
+                    usuarioActual%nombre = nombre
+                  end if
+                  write(*, '(A)') "Desea Modificar la contraseña del usuario [s/n]"
+                  read *, op
+                  if(op=='s'.or. op=='S') then
+                    write(*, '(A)') "Ingrese Password Nuevo"
+                    read (*,'(A)') password
+                    usuarioActual%password = password
+                  end if
+                end if
               case ('4')
+                write(*, '(A)') "|---------------------------------------------|"
+                write(*, '(A)') "|              Eliminar Usuario              |"
+                write(*, '(A)') "|---------------------------------------------|"
               case ('5')
+                write(*, '(A)') "|---------------------------------------------|"
+                write(*, '(A)') "|            Carga Masiva Usuario             |"
+                write(*, '(A)') "|---------------------------------------------|"
                 print *, ""
                 print *, "Ingrese el nombre del Archivo: "
                 read *, archivo
@@ -152,6 +192,44 @@ program main
         end do
     end subroutine menuAdmin
 
+    subroutine menuestructuras ()
+      character(len=1) :: opce
+      integer :: imgseleccionada
+         do 
+             print *, "" 
+             write(*, '(A)') "|-----------------------------------------|"
+             write(*, '(A)') "|     Pixel Print Studio Estructuras      |"
+             write(*, '(A)') "|-----------------------------------------|"
+             write(*, '(A)') "| 1. Arbol de Imagenes                    |" 
+             write(*, '(A)') "| 2. Arbol de Capas                       |"     
+             write(*, '(A)') "| 3. Listado de álbumes                   |"     
+             write(*, '(A)') "| 4. Ver Capa                             |"     
+             write(*, '(A)') "| 5. Imagen y Arbol de Capas              |"
+             write(*, '(A)') "| 6. Regresar                             |"  
+             write(*, '(A)') "|-----------------------------------------|"
+             write(*, '(A)') "Ingrese el numero de opcion"
+               read *, opce
+               select case (opce)
+               case ('1')
+                 call usuarioActual%arbolDeImagenes%graficar()
+               case ('2')
+                 call usuarioActual%arbolDeCapas%graph("ArbolDeCapas")
+               case ('3')
+                write(*, '(A)') "Ingrese el id de la Imagen a observar"
+                read *, imgseleccionada
+                call usuarioActual%arbolDeImagenes%graficarac(imgseleccionada)
+               case ('4')
+ 
+               case ('5')
+        
+               case ('6')
+                   exit
+               case default
+                 print *, "Opcion no valida. Por favor, intente de nuevo."
+               end select   
+         end do
+     end subroutine menuestructuras
+ 
     subroutine agregarUsuario ()
       write(*, '(A)') "-----------------------------------------"
       write(*,'(A)') "             REGISTRO DE USUARIO          "

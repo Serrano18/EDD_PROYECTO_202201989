@@ -1,0 +1,7 @@
+ digraph G {
+ "Nodofe3f22fd-2e5e-460e-6ad2-183f76fff099"[label= "           5 "]
+ "Nodofe3f22fd-2e5e-460e-6ad2-183f76fff099"->"Nodod587928f-f6ad-43b7-7ab8-1ef0cf7fc426"
+ "Nodofe3f22fd-2e5e-460e-6ad2-183f76fff099"->"Nodofe73942a-9ab8-43ed-680e-a285ffffae95"
+ "Nodod587928f-f6ad-43b7-7ab8-1ef0cf7fc426"[label= "           1 "]
+ "Nodofe73942a-9ab8-43ed-680e-a285ffffae95"[label= "           6 "]
+ }

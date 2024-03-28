@@ -1,10 +1,19 @@
 module arbolavl
     use uuid_module
+    use abbidm   
     implicit none
-    private
+
+    type :: Imagen
+        integer :: id
+        type(abbid) :: arbolIdCapas
+        contains
+        procedure :: setId
+        procedure :: getId
+        procedure :: agregarNodoIdCapas
+    end type Imagen
 
     type :: nodo
-        integer :: valor
+        type(Imagen) :: valor
         integer :: altura = 1
         type(nodo), pointer :: derecha => null()
         type(nodo), pointer :: izquierda => null() 
@@ -14,26 +23,45 @@ module arbolavl
         type(nodo), pointer :: raiz => null()
     
     contains
-        procedure :: insert
-        procedure :: delete
+        procedure :: insertavl
+        procedure :: deleteavl
         procedure :: preorden
         procedure :: graficar
+        procedure :: graficarac
     end type avl
 
 contains
-    subroutine insert(self, val)
+    subroutine agregarNodoIdCapas(this, value)
+        class(Imagen), intent(inout) :: this
+        integer, intent(in) :: value
+        call this%arbolIdCapas%add(value)
+    end subroutine agregarNodoIdCapas
+
+    subroutine setId(this, newId)
+        class(Imagen), intent(inout) :: this
+        integer, intent(in) :: newId
+        this%id = newId
+    end subroutine setId
+
+    function getId(this) result(id)
+        class(Imagen), intent(in) :: this
+        integer :: id
+        id = this%id
+    end function getId
+    
+    subroutine insertavl(self, val)
         class(avl), intent(inout) :: self
-        integer, intent(in) :: val
+        type(Imagen), intent(in) :: val
 
         call insertRec(self%raiz, val)
-    end subroutine insert
+    end subroutine insertavl
 
-    subroutine delete(self, val)
+    subroutine deleteavl(self, val)
         class(avl), intent(inout) :: self
-        integer, intent(in) :: val
+        type(Imagen), intent(in) :: val
 
         self%raiz => deleteRec(self%raiz, val)
-    end subroutine delete
+    end subroutine deleteavl
 
     subroutine preorden(self)
         class(avl), intent(in) :: self
@@ -43,16 +71,16 @@ contains
 
     recursive subroutine insertRec(raiz, val)
         type(nodo), pointer, intent(inout) :: raiz
-        integer, intent(in) :: val
+        type(Imagen), intent(in) :: val
 
         if(.not. associated(raiz)) then
             allocate(raiz)
             raiz = nodo(valor=val)
         
-        else if(val < raiz%valor) then 
+        else if(val%id < raiz%valor%id) then 
             call insertRec(raiz%izquierda, val)
 
-        else if(val > raiz%valor) then
+        else if(val%id > raiz%valor%id) then
             call insertRec(raiz%derecha, val)
         end if
 
@@ -80,7 +108,7 @@ contains
 
     recursive function deleteRec(raiz, val) result(res)
         type(nodo), pointer :: raiz
-        integer, intent(in) :: val
+        type(Imagen), intent(in) :: val
 
         type(nodo), pointer :: temp
         type(nodo), pointer :: res 
@@ -90,10 +118,10 @@ contains
             return
         end if
 
-        if(val < raiz%valor) then
+        if(val%id < raiz%valor%id) then
             raiz%izquierda => deleteRec(raiz%izquierda, val)
         
-        else if(val > raiz%valor) then
+        else if(val%id > raiz%valor%id) then
             raiz%derecha => deleteRec(raiz%derecha, val)
 
         else
@@ -184,7 +212,7 @@ contains
         type(nodo), pointer, intent(in) :: raiz
 
         if(associated(raiz)) then
-            print *, raiz%valor
+            print *, raiz%valor%id
             call preordenRec(raiz%izquierda)
             call preordenRec(raiz%derecha)
         end if
@@ -232,7 +260,7 @@ contains
 
         if(associated(raiz)) then
             !"Nodo_uuid"[Label="1"]
-            write(io, *) '"Nodo'//nombre//'"[label= "', raiz%valor, '"]'
+            write(io, *) '"Nodo'//nombre//'"[label= "', raiz%valor%id, '"]'
 
             if(associated(raiz%izquierda)) then
                 !"Nodo_uuid"->"Nodo_uuidHijoIzquierdo"
@@ -274,4 +302,66 @@ contains
             print *, "La imagen fue generada exitosamente"
         end if
     end subroutine graficar
+
+    
+    recursive subroutine imprimirRec2(raiz, nombre, io,img)
+        type(nodo), pointer, intent(in) :: raiz
+        character(len=36), intent(in) :: nombre
+        integer,intent(in) :: img
+        integer :: io
+
+        character(len=36) :: derecha
+        character(len=36) :: izquierda
+
+        derecha = generate_uuid()
+        izquierda = generate_uuid()
+
+        if(associated(raiz)) then
+            !"Nodo_uuid"[Label="1"]
+            write(io, *) '"Nodo'//nombre//'"[label= "', raiz%valor%id, '"]'
+            if(raiz%valor%id == img)then
+                write(io, '(A,I0,A)') '  "', nombre, '" [color=red];'
+                write(io, '(A,I0,A,I0,A)') '  "', nombre, '" -> "', raiz%valor%arbolIdCapas%root%uid, '";'
+                call raiz%valor%arbolIdCapas%dotgen_rec(raiz%valor%arbolIdCapas%root, io)
+            end if
+            if(associated(raiz%izquierda)) then
+                !"Nodo_uuid"->"Nodo_uuidHijoIzquierdo"
+                write(io, *) '"Nodo'//nombre//'"->"Nodo'//izquierda//'"'
+            end if
+
+            if(associated(raiz%derecha)) then
+                !"Nodo_uuid"->"Nodo_uuidHijoDerecho"
+                write(io, *) '"Nodo'//nombre//'"->"Nodo'//derecha//'"'
+            end if
+            call imprimirRec(raiz%izquierda, izquierda, io)
+            call imprimirRec(raiz%derecha, derecha, io)
+        end if
+    end subroutine imprimirRec2
+
+    subroutine graficarac(self,img)
+        class(avl), intent(in) :: self
+        integer :: io
+        integer :: i
+        character(len=100) :: comando
+        integer,intent(in) :: img
+        io = 1
+        open(newunit=io, file="./avl_tree_layer.dot")
+        comando = "dot -Tpng ./avl_tree_layer.dot -o ./avl_tree_layer.png"
+
+        write(io, *) "digraph G {"
+            !Graficar
+        if(associated(self%raiz)) then
+            call imprimirRec2(self%raiz, generate_uuid(), io,img)
+        end if
+        write(io, *) "}"
+        close(io)
+
+        call execute_command_line(comando, exitstat=i)
+
+        if(i == 1) then
+            print *, "Error al momento de crear la imagen"
+        else
+            print *, "La imagen fue generada exitosamente"
+        end if
+    end subroutine graficarac
 end module arbolavl

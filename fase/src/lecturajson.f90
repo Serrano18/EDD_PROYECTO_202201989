@@ -1,7 +1,12 @@
 module lecturajson
     use json_module
+    use arbolavl
     use usuario, only: User
     use arbolb, only:BTreeNode
+    use arbolbb
+    use listadoPixeles
+
+    use json_module, ik => json_ik
     implicit none
         type(json_file) :: json
         type(json_core) :: jsonc
@@ -66,5 +71,102 @@ module lecturajson
         subroutine destroy_json()
             call json%destroy()
         end subroutine destroy_json
+
+        subroutine cargaMasivaCapas (file_path, tree)
+            character(len=*), intent(in) :: file_path
+            type(abb),intent (inout) :: tree
+            type(pixel) :: temp_pixel,new_pixel
+            type(capas) :: temp_capa,new_Capa
+            integer :: num
+            call load_json(file_path)
+            
+            do i = 1, sizej
+                !temp_capa = new_capa
+                call jsonc%get_child(listP, i, tempP, found=found)
+                if ( found ) then
+
+                    call jsonc%get_child(tempP, 'id_capa', caracP, found=found)
+                    if ( found ) then
+                        call jsonc%get(caracP, tempStr)
+                        num = convert_to_integer2(tempStr)
+                        call temp_capa%setId(num)
+                    end if
+
+                    call jsonc%get_child(tempP, 'pixeles', sublistP, found=found)
+                    if ( found ) then
+                        call jsonc%info(sublistP, n_children=sizek)
+                        do j = 1, sizek
+                            temp_pixel = new_pixel
+                            call jsonc%get_child(sublistP, j, tempP, found=found)
+                            if ( found ) then
+                                call jsonc%get_child(tempP, 'fila', caracP, found=found)
+                                if ( found ) then
+                                    call jsonc%get(caracP, tempStr)
+                                    num = convert_to_integer2(tempStr)
+                                    call temp_pixel%setFila(num)
+                                end if
+
+                                call jsonc%get_child(tempP, 'columna', caracP, found=found)
+                                if ( found ) then
+                                    call jsonc%get(caracP, tempStr)
+                                    num = convert_to_integer2(tempStr)
+                                    call temp_pixel%setColumna(num)
+                                end if
+
+                                call jsonc%get_child(tempP, 'color', caracP, found=found)
+                                if ( found ) then
+                                    call jsonc%get(caracP, tempStr)
+                                    call temp_pixel%setColor(tempStr)
+                                end if
+                            end if
+                            call temp_capa%agregarPixel(temp_pixel)
+                        end do
+                    end if
+                end if
+
+                call tree%insert(temp_capa)
+            end do
+        end subroutine cargaMasivaCapas
+        
+        subroutine cargaMasivaImagenes(file_path,tree)
+            character(len=*), intent(in) :: file_path
+            integer(kind=ik), allocatable :: tempInt(:)
+            type(avl), intent(inout):: tree
+            type(Imagen) :: temp_image,new_image
+            integer :: num
+        
+            call load_json(file_path)
+        
+            do i = 1, sizej
+                temp_image = new_image  ! Suponiendo que `image` es tu tipo de datos Imagen
+                call jsonc%get_child(listP, i, tempP, found=found)
+                if (found) then
+                    call jsonc%get_child(tempP, 'id', caracP, found=found)
+                    if (found) then
+                        call jsonc%get(caracP, tempStr)
+                        num = convert_to_integer2(tempStr)
+                        call temp_image%setId(num)
+                    end if
+        
+                    call jsonc%get_child(tempP, 'capas', caracP, found=found)
+                    if (found) then
+                        call jsonc%get(caracP, tempInt)
+                        do j = 1, size(tempInt)
+                            call temp_image%agregarNodoIdCapas(tempInt(j))
+                        end do
+                    end if
+                end if
+        
+                call tree%insertavl(temp_image)
+            end do
+        
+            call destroy_json()
+        end subroutine cargaMasivaImagenes
+        
+        function convert_to_integer2(str) result(num)
+            character(len=*), intent(in) :: str
+            integer :: num
+            read(str, *) num
+        end function convert_to_integer2
 
 end module lecturajson

@@ -1,9 +1,18 @@
 module arbolbb
+    
+    use listadoPixeles
     implicit none
-    private
+    type, public :: capas
+        integer :: id
+        type(Listapixel) :: listadoDePixeles
+        contains
+            procedure :: setId
+            procedure :: getId
+            procedure :: agregarPixel
+    end type capas
 
     type :: Node_t
-        integer :: value
+        type(capas) :: value
         type(Node_t), pointer :: right => null()
         type(Node_t), pointer :: left => null()
     end type Node_t
@@ -20,11 +29,29 @@ module arbolbb
         procedure :: graph
     end type abb
 
-contains    
+contains   
+
+    subroutine agregarPixel(this, pix)
+        class(capas), intent(inout) :: this
+        type(pixel), intent(in) :: pix
+
+        call this%listadoDePixeles%append(pix)
+    end subroutine agregarPixel 
+    subroutine setId(this, newId)
+        class(capas), intent(inout) :: this
+        integer, intent(in) :: newId
+        this%id = newId
+    end subroutine setId
+
+    function getId(this) result(id)
+        class(capas), intent(in) :: this
+        integer :: id
+        id = this%id
+    end function getId
     !Subrutinas del tipo abb
     subroutine insert(self, val)
         class(abb), intent(inout) :: self
-        integer, intent(in) :: val
+        type(capas), intent(in) :: val
 
         if (.not. associated(self%root)) then
             allocate(self%root)
@@ -35,16 +62,16 @@ contains
     end subroutine insert
     recursive subroutine insertRec(root, val)
         type(Node_t), pointer, intent(inout) :: root
-        integer, intent(in) :: val
+        type(capas) , intent(in) :: val
         
-        if (val < root%value) then
+        if (val%id < root%value%id) then
             if (.not. associated(root%left)) then
                 allocate(root%left)
                 root%left%value = val
             else
                 call insertRec(root%left, val)
             end if
-        else if (val > root%value) then
+        else if (val%id > root%value%id) then
             if (.not. associated(root%right)) then
                 allocate(root%right)
                 root%right%value = val
@@ -56,13 +83,13 @@ contains
 
     subroutine delete(self, val)
         class(abb), intent(inout) :: self
-        integer, intent(inout) :: val
+        type(capas), intent(inout) :: val
     
         self%root => deleteRec(self%root, val)
     end subroutine delete
     recursive function deleteRec(root, value) result(res)
         type(Node_t), pointer :: root
-        integer, intent(in) :: value
+        type(capas), intent(in) :: value
         type(Node_t), pointer :: res
         type(Node_t), pointer :: temp
 
@@ -71,9 +98,9 @@ contains
             return
         end if
 
-        if (value < root%value) then
+        if (value%id < root%value%id) then
             root%left => deleteRec(root%left, value)
-        else if (value > root%value) then
+        else if (value%id > root%value%id) then
             root%right => deleteRec(root%right, value)
         else
             if (.not. associated(root%left)) then
@@ -115,7 +142,7 @@ contains
 
         if(associated(root)) then
             ! RAIZ - IZQ - DER
-            write(*, '(I0 A)', advance='no') root%value, " - "
+            write(*, '(I0 A)', advance='no') root%value%id, " - "
             call preorderRec(root%left)
             call preorderRec(root%right)
         end if
@@ -133,7 +160,7 @@ contains
         if(associated(root)) then
             ! IZQ - RAIZ - DER
             call inordenRec(root%left)
-            write(*, '(I0 A)', advance='no') root%value, " - "
+            write(*, '(I0 A)', advance='no') root%value%id, " - "
             call inordenRec(root%right)
         end if
     end subroutine inordenRec
@@ -151,7 +178,7 @@ contains
             ! IZQ - DER - RAIZ
             call posordenRec(root%left)
             call posordenRec(root%right)
-            write(*, '(I0 A)', advance='no') root%value, " - "
+            write(*, '(I0 A)', advance='no') root%value%id, " - "
         end if
     end subroutine posordenRec
 
@@ -184,7 +211,7 @@ contains
         if (associated(current)) then
             ! SE OBTIENE INFORMACION DEL NODO ACTUAL
           address = get_address_memory(current)
-          write(str_value, '(I0)') current%Value
+          write(str_value, '(I0)') current%Value%id
           createNodes = createNodes // '"' // trim(address) // '"' // '[label="' // trim(str_value) // '"];' // new_line('a')
           ! VIAJAMOS A LA SUBRAMA IZQ
           if (associated(current%Left)) then

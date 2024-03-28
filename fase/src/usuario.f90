@@ -1,10 +1,14 @@
 module usuario
+    use arbolbb
+    use arbolavl
     implicit none
     type, public :: User 
 
         character(len=100) :: nombre   
         integer (kind=8):: dpi
         character (len=20) :: password
+        type(abb) :: arbolDeCapas
+        type(avl)::arbolDeImagenes
         contains
         procedure :: setNombre
         procedure :: getNombre
