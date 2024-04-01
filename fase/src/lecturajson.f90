@@ -5,6 +5,7 @@ module lecturajson
     use arbolbb
     use listadoPixeles
     use arbolavl
+    use listadoAlbums
     use json_module, ik => json_ik
     implicit none
         type(json_file) :: json
@@ -160,6 +161,38 @@ module lecturajson
         
             call destroy_json()
         end subroutine cargaMasivaImagenes
+
+        
+    subroutine cargaMasivaAlbums(file_path,listadoAlbum) 
+        character(len=*), intent(in) :: file_path
+        integer(kind=ik), allocatable :: tempInt(:)
+        type(album) :: temp_album, new_album
+        type(listaAlbum), intent(inout) :: listadoAlbum
+        integer :: num
+
+        call load_json(file_path)
+        do i = 1, sizej
+            temp_album = new_album
+            call jsonc%get_child(listP, i, tempP, found=found)
+            if ( found ) then
+
+                call jsonc%get_child(tempP, 'nombre_album', caracP, found=found)
+                if ( found ) then
+                    call jsonc%get(caracP, tempStr)
+                    call temp_album%SetName(tempStr)
+                end if
+
+                call jsonc%get_child(tempP, 'imgs', caracP, found=found)
+                if ( found ) then
+                    call jsonc%get(caracP, tempInt)
+                    do num = 1, size(tempInt)
+                        call temp_album%agregarImagen(tempInt(num))
+                    end do
+                end if
+            end if
+            call listadoAlbum%agregarA(temp_album)
+        end do
+    end subroutine cargaMasivaAlbums
 
         function convert_to_integer2(str) result(num)
             character(len=*), intent(in) :: str

@@ -1,0 +1,19 @@
+digraph G {
+node [shape=box, style="rounded,filled", fillcolor=lightblue, color=blue];
+"Album 1"->"Album 2" [color=red]
+{rank=same; "Album 1"; "Album 2";}
+"Album 1"->50
+"50" [label="5"]
+"Album 2"->"Album 3" [color=red]
+{rank=same; "Album 2"; "Album 3";}
+"Album 2"->21
+"21" [label="2"]
+21->41
+"41" [label="4"]
+41->61
+"61" [label="6"]
+"Album 2"->"Album 1"[color=blue]
+"Album 3"->72
+"72" [label="7"]
+"Album 3"->"Album 2"[color=blue]
+}

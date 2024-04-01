@@ -4,10 +4,13 @@ module arbolavl
     implicit none
 
     type :: Imagen
-    private
+    
         integer :: id
         type(abbid) :: arbolIdCapas
+        type(linkedlist) :: capa
         contains
+        procedure :: agregarcapa
+        procedure :: eliminarCapa
         procedure :: setIdImg
         procedure :: getId
         procedure :: agregarNodoIdCapas
@@ -15,23 +18,125 @@ module arbolavl
 
     type :: nodo
         type(Imagen) :: valor
+        integer :: newId
+        integer :: height
         integer :: altura = 1
         type(nodo), pointer :: derecha => null()
         type(nodo), pointer :: izquierda => null() 
     end type
 
     type, public :: avl
+        integer :: uid = 1
+        integer :: num = 0
+        integer :: ncapas = 0
         type(nodo), pointer :: raiz => null()
     
-    contains
+      contains
         procedure :: insertavl
         procedure :: deleteavl
         procedure :: preorden
         procedure :: graficar
         procedure :: graficarArbolDeCapasDeImagen
+        procedure :: getheight
+        procedure :: getmax
+        procedure :: searchavl
+        procedure :: amplitudeavl
+        procedure :: getTotalCapas
+        procedure :: search_recavl
+        procedure :: amplitude_recavl
+        procedure :: insertRec
     end type avl
 
 contains
+    subroutine getTotalCapas(this, tmp)
+        class(avl), intent(inout) :: this
+        type(nodo), intent(in), pointer :: tmp
+        if( .not. associated(tmp)) then
+            return
+        end if
+        this%ncapas = this%ncapas + tmp%valor%capa%size
+        call this%getTotalCapas(tmp%izquierda)
+        call this%getTotalCapas(tmp%derecha)
+    end subroutine getTotalCapas
+
+    integer function getheight (this, tmp)
+        class(avl), intent(in) :: this
+        type(nodo), intent(in), pointer :: tmp
+        if (.not. associated(tmp)) then
+            getheight = -1
+        else
+            getheight = tmp%height
+        end if
+    end function getheight
+
+    integer function getmax(this, val1, val2)
+        class(avl), intent(in) :: this
+        integer, intent(in) :: val1, val2
+        getmax = merge(val1, val2, val1 > val2)
+    end function getmax
+
+    function searchavl(this, tid) result(res)
+        class(avl), intent(in) :: this
+        integer, intent(in) :: tid
+        type(Imagen), pointer :: res
+        type(Imagen) :: imag
+        call imag%setIdImg(tid)
+        res => this%search_recavl(imag, this%raiz)
+    end function searchavl
+
+    recursive function search_recavl(this, image, tmp) result(res)
+        type(Imagen), target, intent(in) :: image
+        class(avl), intent(in) :: this
+        
+        type(nodo), pointer, intent(in) :: tmp
+        type(Imagen), pointer :: res
+        if (.not. associated(tmp)) then
+            res => null()
+        else if (image%id < tmp%valor%id) then
+            res => this%search_recavl(image, tmp%izquierda)
+        else if (image%id > tmp%valor%id) then
+            res => this%search_recavl(image, tmp%derecha)
+        else
+            res => tmp%valor
+        end if
+    end function search_recavl
+
+    subroutine amplitudeavl(this)
+        class(avl), intent(in) :: this
+        integer :: i
+        do i = 0, this%getheight(this%raiz)
+            call this%amplitude_recavl(this%raiz, i)
+        end do
+    end subroutine amplitudeavl
+
+    subroutine amplitude_recavl(this, tmp, level)
+        class(avl), intent(in) :: this
+        type(nodo), pointer, intent(in) :: tmp
+        integer, intent(in) :: level
+        if (.not. associated(tmp)) then
+            return
+        end if
+        if (level == 0) then
+            write (*, '(1I3)', advance='no') (tmp%valor%id)
+        else
+            call this%amplitude_recavl(tmp%izquierda, level-1)
+            call this%amplitude_recavl(tmp%derecha, level-1)
+        end if
+    end subroutine amplitude_recavl
+
+
+    subroutine agregarcapa(this, id)
+        class(Imagen), intent(inout) :: this
+        integer :: id
+        call this%capa%addlist(id)
+    end subroutine agregarcapa
+
+    subroutine eliminarCapa(this, id)
+        class(Imagen), intent(inout) :: this
+        integer :: id
+        call this%capa%remove(id)
+    end subroutine eliminarCapa
+
     subroutine agregarNodoIdCapas(this, value)
         class(Imagen), intent(inout) :: this
         integer, intent(in) :: value
@@ -53,7 +158,12 @@ contains
     subroutine insertavl(self, val)
         class(avl), intent(inout) :: self
         type(Imagen), intent(in) :: val
-        call insertRec(self%raiz, val)
+        if (associated(self%searchavl(val%id))) then
+            print *, "La imagen con ID ", val%id, " ya existe en el Arbol."
+        else
+            call self%insertRec(self%raiz, val)
+        end if
+        
     end subroutine insertavl
 
     subroutine deleteavl(self, val)
@@ -69,19 +179,23 @@ contains
         call preordenRec(self%raiz)
     end subroutine preorden
 
-    recursive subroutine insertRec(raiz, val)
+    recursive subroutine insertRec(this,raiz, val)
+        class(avl), intent(inout) :: this
         type(nodo), pointer, intent(inout) :: raiz
         type(Imagen), intent(in) :: val
-
+        integer :: r, l, m
         if(.not. associated(raiz)) then
             allocate(raiz)
-            raiz = nodo(valor=val)
-        
+            raiz%valor=val
+            raiz%newId = this%uid
+            raiz%height=0
+            this%uid = this%uid + 1
+            this%num = this%num + 1
         else if(val%id < raiz%valor%id) then 
-            call insertRec(raiz%izquierda, val)
+            call this%insertRec(raiz%izquierda, val)
 
         else if(val%id > raiz%valor%id) then
-            call insertRec(raiz%derecha, val)
+            call this%insertRec(raiz%derecha, val)
         end if
 
         raiz%altura = maximo(obtenerAltura(raiz%izquierda), obtenerAltura(raiz%derecha)) + 1
@@ -104,6 +218,10 @@ contains
                 raiz => rotacionDerecha(raiz)
             end if
         end if
+        r = this%getheight(raiz%derecha)
+        l = this%getheight(raiz%izquierda)
+        m = this%getmax(r, l)
+        raiz%height = m + 1
     end subroutine insertRec
 
     recursive function deleteRec(raiz, val) result(res)
@@ -295,7 +413,7 @@ contains
         close(io)
 
         call execute_command_line(comando, exitstat=i)
-
+        call execute_command_line('start ArbolImagenes.png')
         if(i == 1) then
             print *, "Error al momento de crear la imagen"
         else
@@ -323,11 +441,12 @@ contains
         close(io)
 
         call execute_command_line(comando, exitstat=i)
-
+       
         if(i == 1) then
             print *, "Error al momento de crear la imagen"
         else
             print *, "La imagen fue generada exitosamente"
+            call execute_command_line('start ArbolImagenyCapas.png')
         end if
     end subroutine graficarArbolDeCapasDeImagen
     

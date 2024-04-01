@@ -202,6 +202,8 @@ contains
         dotStructure = dotStructure // trim(createNodes) // trim(linkNodes) // "}" // new_line('a')
         call write_dot(filename, dotStructure)
         print *, "Archivo actualizado existosamente."
+       
+    
     end subroutine graph
     recursive subroutine RoamTree(current, createNodes, linkNodes)
         type(Node_t), pointer :: current
@@ -248,6 +250,7 @@ contains
 
         ! Genera la imagen PNG
         call system("dot -Tpng "// dot_filename //" -o " // png_filename)
+        call execute_command_line('start '// png_filename) 
     end subroutine write_dot
 
     function get_address_memory(node) result(address)

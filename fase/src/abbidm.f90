@@ -128,7 +128,7 @@ module abbidm
             if( .not. associated(tmp)) then
                 return
             end if
-            call this%list%add(tmp%value)
+            call this%list%addlist(tmp%value)
             call this%preorder(tmp%left)
             call this%preorder(tmp%right)
         end subroutine preorder
@@ -141,7 +141,7 @@ module abbidm
             end if
             call this%inorder(tmp%left)
 
-            call this%list%add(tmp%value)
+            call this%list%addlist(tmp%value)
             call this%inorder(tmp%right)
         end subroutine inorder
 
@@ -154,7 +154,7 @@ module abbidm
             call this%postorder(tmp%left)
             call this%postorder(tmp%right)
 
-            call this%list%add(tmp%value)
+            call this%list%addlist(tmp%value)
         end subroutine postorder
 
         subroutine dotgen2(this)
@@ -308,7 +308,7 @@ module abbidm
             do while (.not. q%isempty())
                 tmp => q%dequeue()
                 if ( associated(tmp) ) then
-                    call this%list%add(tmp%value)
+                    call this%list%addlist(tmp%value)
                     if ( associated(tmp%left) ) then
                         call q%enqueue(tmp%left)
                     end if

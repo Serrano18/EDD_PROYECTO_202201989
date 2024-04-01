@@ -12,7 +12,7 @@ module linkedlistm
         type(node), pointer :: head => null()
         type(node), pointer :: tail => null()
     contains
-        procedure :: add
+        procedure :: addlist
         procedure :: remove
         procedure :: search
         procedure :: print
@@ -48,7 +48,7 @@ contains
     end subroutine remove
 
 
-    subroutine add(this, value)
+    subroutine addlist(this, value)
         class(linkedlist), intent(inout) :: this
         integer, intent(in) :: value
         type(node), pointer :: new_node
@@ -70,7 +70,7 @@ contains
 
         this%tail => new_node
         this%size = this%size + 1
-    end subroutine add
+    end subroutine addlist
     
     subroutine print(this)
         class(linkedlist), intent(in) :: this

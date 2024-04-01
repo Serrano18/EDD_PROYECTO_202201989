@@ -18,7 +18,7 @@ module arbolb
         procedure :: insert
         procedure :: printTree
         procedure :: createNode
-        procedure :: remove
+        procedure :: removeUser
         procedure :: graphTree
         procedure :: searchUser
         procedure :: searchUserByNameAndPassword
@@ -269,110 +269,76 @@ recursive function searchByNameAndPassword(myNode, nombre, pass) result(users)
     end if
 end function searchByNameAndPassword
 
-subroutine remove(this,dpi)
+subroutine removeUser(this, dpi)
     class(BTreeNode), intent(inout) :: this
     integer(kind=8), intent(in) :: dpi
-    logical :: isDeleted
-    if (.not. associated(this%root)) then
-        print *, "Empty tree"
-        return
-    end if
-    call deleteValue(dpi, this%root, isDeleted)
-    if (isDeleted .and. this%root%num == 0) then
-        if (associated(this%root%link(0)%ptr)) then
-            this%root => this%root%link(0)%ptr
-        end if
+    call remove(this%root, dpi)
+end subroutine removeUser
+
+recursive subroutine remove(nodo, dpi)
+    type(BTreeNode), pointer, intent(inout) :: nodo
+    integer(kind=8), intent(in) :: dpi
+    integer :: i, j
+    if (associated(nodo)) then
+            i = 1
+            do while (i <= nodo%num .and. dpi > nodo%val(i)%dpi)
+                i = i + 1
+            end do
+            if (i <= nodo%num .and. dpi == nodo%val(i)%dpi) then
+                if (.not. associated(nodo%link(i-1)%ptr)) then
+                    do j = i + 1, nodo%num
+                        nodo%val(j-1) = nodo%val(j)
+                        nodo%link(j-1)%ptr => nodo%link(j)%ptr
+                    end do
+                    nodo%num = nodo%num - 1
+                else
+                    call restore(nodo, i)
+                end if
+            else
+                call remove(nodo%link(i-1)%ptr, dpi)
+            end if
+    else
+            print *, "Client not found"
     end if
 end subroutine remove
 
-recursive subroutine deleteValue(val, node, isDeleted)
-    integer(kind=8), intent(in):: val
-    type(BTreeNode), pointer, intent(inout) :: node
-    logical, intent(out) :: isDeleted
-    integer :: pos
-    integer(kind=8) :: successorVal
-
-    isDeleted = .false.
-
-    if (.not. associated(node)) then
-        return
-    end if
-
-    pos = findPosition(val, node)
-
-    if (pos > 0) then
-        if (associated(node%link(pos-1)%ptr)) then
-            call getPredecessor(node%link(pos-1)%ptr, successorVal)
-            node%val(pos)%dpi = successorVal
-            call deleteValue(successorVal, node%link(pos-1)%ptr, isDeleted)
-            if (.not. isDeleted) then
-                return
-            end if
-        end if
-    else
-        pos = -pos
-        call deleteValue(val, node%link(pos)%ptr, isDeleted)
-        if (.not. isDeleted) then
-            return
-        end if
-    end if
-
-    if (isDeleted) then
-        if (pos > 0) then
-            call removeEntry(pos, node)
-        else
-            pos = -pos
-            call getPredecessor(node%link(pos)%ptr, successorVal)
-            node%val(pos)%dpi = successorVal
-            call deleteValue(successorVal, node%link(pos)%ptr, isDeleted)
-            if (.not. isDeleted) then
-                return
-            end if
-        end if
-    end if
-
-    isDeleted = .true.
-end subroutine deleteValue
-
-! Función para encontrar la posición de un valor en un nodo
-integer function findPosition(val, node)
-    integer(kind=8), intent(in):: val
-    type(BTreeNode), intent(in) :: node
-    integer :: i
-
-    findPosition = 0
-    do i = 1, node%num
-        if (val == node%val(i)%dpi) then
-            findPosition = i
-            return
-        else if (val < node%val(i)%dpi) then
-            findPosition = -i
-            return
-        end if
-    end do
-end function findPosition
-
-! Subrutina para obtener el predecesor de un nodo
-subroutine getPredecessor(node, predecessorVal)
-    type(BTreeNode), pointer :: node
-    integer(kind=8), intent(out) :: predecessorVal
-    do while (associated(node%link(node%num)%ptr))
-        node => node%link(node%num)%ptr
-    end do
-    predecessorVal = node%val(node%num)%dpi
-end subroutine getPredecessor
-
-! Subrutina para eliminar una entrada de un nodo
-subroutine removeEntry(pos, node)
+subroutine restore(nodo, pos)
+    type(BTreeNode), pointer, intent(inout) ::nodo
     integer, intent(in) :: pos
-    type(BTreeNode), pointer, intent(inout) :: node
+    type(BTreeNode), pointer :: q
+    q => nodo%link(pos-1)%ptr
+    if (q%num > MINI) then
+            do while (associated(q%link(q%num)%ptr))
+                q => q%link(q%num)%ptr
+            end do
+            nodo%val(pos) = q%val(q%num)
+            q%num = q%num - 1
+    else
+            call combine(nodo, pos)
+    end if
+end subroutine restore
+
+subroutine combine(nodo, pos)
+    type(BTreeNode), pointer, intent(inout) :: nodo
+    integer, intent(in) :: pos
+    type(BTreeNode), pointer :: q, r
     integer :: i
-    do i = pos, node%num-1
-        node%val(i) = node%val(i+1)
-        node%link(i)%ptr => node%link(i+1)%ptr
+    q => nodo%link(pos-1)%ptr
+    r => nodo%link(pos)%ptr
+    q%num = q%num + 1
+    q%val(q%num) = nodo%val(pos)
+    q%link(q%num)%ptr => r%link(0)%ptr
+    do i = 1, r%num
+            q%num = q%num + 1
+            q%val(q%num) = r%val(i)
+            q%link(q%num)%ptr => r%link(i)%ptr
     end do
-    node%link(node%num)%ptr => null()
-    node%num = node%num - 1
-end subroutine removeEntry
+    do i = pos, nodo%num-1
+            nodo%val(i) = nodo%val(i+1)
+            nodo%link(i)%ptr => nodo%link(i+1)%ptr
+    end do
+    nodo%num = nodo%num - 1
+    deallocate(r)
+end subroutine combine
 
 end module arbolb

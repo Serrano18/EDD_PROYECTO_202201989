@@ -1,6 +1,9 @@
 module usuario
-    use arbolbb
-    use arbolavl
+    use arbolbb, only: abb
+    use arbolavl, only:avl
+    use listadoAlbums, only:listaAlbum
+    use matriz, only:matrix
+
     implicit none
     type, public :: User
         character(len=100) :: nombre   
@@ -8,6 +11,7 @@ module usuario
         character (len=20) :: password
         type(abb) :: arbolDeCapas
         type(avl) :: arbolDeImagenes
+        type(listaAlbum) :: listadoDeAlbums
         contains
         procedure :: setNombre
         procedure :: getNombre
