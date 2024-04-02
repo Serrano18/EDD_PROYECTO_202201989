@@ -1,20 +1,10 @@
 module arbolavl
     use uuid_module
     use abbidm   
+    use Imagens, only: Imagen
+    use listadoImagenes, only:linkedlistImagen
     implicit none
 
-    type :: Imagen
-    
-        integer :: id
-        type(abbid) :: arbolIdCapas
-        type(linkedlist) :: capa
-        contains
-        procedure :: agregarcapa
-        procedure :: eliminarCapa
-        procedure :: setIdImg
-        procedure :: getId
-        procedure :: agregarNodoIdCapas
-    end type Imagen
 
     type :: nodo
         type(Imagen) :: valor
@@ -45,9 +35,32 @@ module arbolavl
         procedure :: search_recavl
         procedure :: amplitude_recavl
         procedure :: insertRec
+        procedure :: preorden2
+        procedure :: top5
     end type avl
 
 contains
+    subroutine top5(this)
+        class (avl), intent(inout) :: this
+        type(linkedlistImagen) :: listaImagenes
+        call listaImagenes%iniciarimag()
+        call this%preorden2(this%raiz, listaImagenes)
+        call listaImagenes%ordenarporcapa()
+        call listaImagenes%printimag()
+    end subroutine top5
+
+     subroutine preorden2(self, raiz, listaImagenes)
+        class(avl), intent(in) :: self
+        type(nodo), pointer, intent(in) :: raiz
+        type(linkedlistImagen), intent(inout) :: listaImagenes
+        if(.not. associated(raiz)) then
+           return
+        end if
+        call listaImagenes%addlistimag(raiz%valor)
+        call self%preorden2(raiz%izquierda, listaImagenes)
+        call self%preorden2(raiz%derecha,listaImagenes)
+    end subroutine preorden2
+
     subroutine getTotalCapas(this, tmp)
         class(avl), intent(inout) :: this
         type(nodo), intent(in), pointer :: tmp
@@ -125,35 +138,7 @@ contains
     end subroutine amplitude_recavl
 
 
-    subroutine agregarcapa(this, id)
-        class(Imagen), intent(inout) :: this
-        integer :: id
-        call this%capa%addlist(id)
-    end subroutine agregarcapa
 
-    subroutine eliminarCapa(this, id)
-        class(Imagen), intent(inout) :: this
-        integer :: id
-        call this%capa%remove(id)
-    end subroutine eliminarCapa
-
-    subroutine agregarNodoIdCapas(this, value)
-        class(Imagen), intent(inout) :: this
-        integer, intent(in) :: value
-        call this%arbolIdCapas%add(value)
-    end subroutine agregarNodoIdCapas
-
-    subroutine setIdImg(this, newId)
-        class(Imagen), intent(inout) :: this
-        integer, intent(in) :: newId
-        this%id = newId
-    end subroutine setIdImg
-
-    function getId(this) result(id)
-        class(Imagen), intent(in) :: this
-        integer :: id
-        id = this%id
-    end function getId
     
     subroutine insertavl(self, val)
         class(avl), intent(inout) :: self

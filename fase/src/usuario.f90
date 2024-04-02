@@ -12,6 +12,7 @@ module usuario
         type(abb) :: arbolDeCapas
         type(avl) :: arbolDeImagenes
         type(listaAlbum) :: listadoDeAlbums
+        type(matrix) :: mimagenes
         contains
         procedure :: setNombre
         procedure :: getNombre
@@ -72,9 +73,9 @@ module usuario
 
         subroutine imprimirDatos(this)
             class(User), intent(in) :: this
-            print *, "Nombre: ", this%nombre
-            print *, "DPI: ", this%dpi
-            print *, "Password: ", this%password
+            write(*,'(A,A)') "Nombre: ", this%nombre
+            write(*,'(A,I0)') "DPI: ", this%dpi
+            write(*,'(A,A)')  "Password: ", this%password
         end subroutine imprimirDatos
 
 end module usuario

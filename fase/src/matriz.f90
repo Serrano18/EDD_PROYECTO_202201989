@@ -37,10 +37,8 @@ module matriz
         procedure :: getValue
         procedure :: graphMatrix
         procedure :: graphTable
-        procedure :: graphmargins
-        procedure :: graphvalues
         procedure :: imprimirvalores
-
+        procedure :: graficarNLogico
         ! procedure :: printRowHeaders
     end type
 
@@ -296,8 +294,6 @@ end subroutine imprimirvalores
         open(unit, file='matriz.dot', status='replace')
         write(unit, '(A)') 'digraph G {'
         write(unit, '(A)') '    node [shape=plaintext];'
-        !call self%graphmargins(unit)
-        !call self%graphvalues(unit)
         call self%graphTable(unit)
         write(unit, '(A)') '}'
         write(unit, '(A)') ''
@@ -313,101 +309,6 @@ end subroutine imprimirvalores
         write (str, '(I0)') i
     end function convertiraCadena
 
-    subroutine graphmargins(self, unit)
-        class(matrix), intent(in) :: self
-        integer, intent(in) :: unit
-        character(len=:), allocatable :: tmp, tmpr, trank
-        integer :: j
-
-        tmp = '    "NR-1C-1"'
-        tmpr = ';'
-        trank = ''
-
-        write(unit, '(A)') ''
-        write(unit, '(A)') '    /*CabeceraH*/'
-
-        do j = -1, self%width
-            write(unit, '(A,I0,A,I0,A,I0,A)') '    "NR-1C',j,'" [label="',j,'" group=',j,'];'
-            trank = '"NR-1C' // trim(convertiraCadena(j)) // '"; ' // trank
-            if ( j /= self%width ) then
-                tmp = tmp // '-> "NR-1C' // trim(convertiraCadena(j+1)) // '"'
-                tmpr = '-> "NR-1C' // trim(convertiraCadena(j)) // '"' // tmpr
-            else
-                tmp = tmp // ';'
-                tmpr = '    "NR-1C' // trim(convertiraCadena(j)) // '"' // tmpr
-            end if
-        end do
-
-        write(unit, '(A)') ''
-        write(unit, '(A)') '    /*RelacionH*/'
-        write(unit, '(A)') '    edge[constraint=true];'
-        write(unit, '(A)') tmp
-        write(unit, '(A)') tmpr
-        write(unit, '(A)') ''
-        write(unit, '(A,A,A)') '    { rank=same; ', trank, '}'
-
-        tmp = '    "NR-1C-1"'
-        tmpr = ';'
-        trank = ''
-
-        write(unit, '(A)') ''
-        write(unit, '(A)') '    /*CabeceraV*/'
-
-        do j = -1, self%height
-            write(unit, '(A,I0,A,I0,A,I0,A)') '    "NR',j,'C-1" [label="',j,'" group=',-1,'];'
-            trank = '"NR' // trim(convertiraCadena(j)) // 'C-1"; ' // trank
-            if ( j /= self%height ) then
-                tmp = tmp // '-> "NR' // trim(convertiraCadena(j+1)) // 'C-1"'
-                tmpr = '-> "NR' // trim(convertiraCadena(j)) // 'C-1"' // tmpr
-            else
-                tmp = tmp // ';'
-                tmpr = '    "NR' // trim(convertiraCadena(j)) // 'C-1"' // tmpr
-            end if
-        end do
-
-        write(unit, '(A)') ''
-        write(unit, '(A)') '    /*RelacionV*/'
-        write(unit, '(A)') '    edge[constraint=true];'
-        write(unit, '(A)') tmp
-        write(unit, '(A)') tmpr
-        write(unit, '(A)') ''
-        write(unit, '(A,A,A)') '    { rank=tb; ', trank, '}'
-    end subroutine graphmargins
-
-    subroutine graphvalues(self, unit)
-        class(matrix), intent(in) :: self
-        type(node), pointer :: aux, temp
-        integer, intent(in) :: unit
-
-        aux => self%root%down
-
-        do while ( associated(aux) )
-            temp => aux%right
-            do while ( associated(temp) )
-                write(unit, '(A,I0,A,I0,A,I0,A,A,A)') '    "NR',aux%i,'C',temp%j,&
-                '" [label="" group=',temp%j,' fillcolor="',temp%value,'"];'
-                write(unit, '(A,I0,A,I0,A,I0,A,I0,A)') '    "NR',aux%i,'C',temp%j,&
-                    '" -> "NR',aux%i,'C',temp%left%j,'"[constraint=false];'
-                write(unit, '(A,I0,A,I0,A,I0,A,I0,A)') '    "NR',aux%i,'C',temp%left%j,&
-                    '" -> "NR',aux%i,'C',temp%j,'"[constraint=false];'
-                write(unit, '(A,I0,A,I0,A,I0,A,I0,A)') '    "NR',temp%i,'C',temp%j,&
-                    '" -> "NR',temp%up%i,'C',temp%j,'";'
-                write(unit, '(A,I0,A,I0,A,I0,A,I0,A)') '    "NR',temp%up%i,'C',temp%j,&
-                    '" -> "NR',temp%i,'C',temp%j,'"[constraint=false];'
-                write(unit, '(A,I0,A,I0,A,I0,A,I0,A)') '    { rank=same; "NR',aux%i,&
-                    'C',temp%j,'"; "NR',aux%i,'C',temp%left%j,'"}'
-                write(unit, '(A,I0,A,I0,A,I0,A,I0,A)') '    { rank=tb; "NR',temp%up%i,&
-                    'C',temp%j,'"; "NR',temp%i,'C',temp%j,'"}'
-                temp => temp%right
-            end do
-            if ( associated(aux%down) ) then
-                aux => aux%down
-            else
-                exit
-            end if
-        end do
-
-    end subroutine graphvalues
 
     subroutine graphTable(self, unit)
         class(matrix), intent(in) :: self
@@ -419,7 +320,7 @@ end subroutine imprimirvalores
         aux => self%root%down
         temp => aux%right
         write(unit, '(A)') '    table [label=<'
-        write(unit, '(A)') '    <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0">'
+        write(unit, '(A)') '    <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" >'
         do l_i = 0, self%height
             write(unit, '(A)') '        <TR>'
             do l_j = 0, self%width
@@ -433,7 +334,7 @@ end subroutine imprimirvalores
                             temp => aux%right
                         end if
                     end if
-                write(unit, '(A,A,A)') '            <TD BGCOLOR="',str,'"></TD>'
+                write(unit, '(A,A,A)') '            <TD BGCOLOR="',str,'" ></TD>'
                 else
                     write(unit, '(A,A,A)') '            <TD BGCOLOR="#FFFFFF"></TD>'
                 end if
@@ -442,4 +343,93 @@ end subroutine imprimirvalores
         end do
         write(unit, '(A)') '    </TABLE>>];'
     end subroutine graphTable
+
+    subroutine graficarNLogico(self)
+        class(matrix), intent(inout) :: self  
+        integer :: i, j, unit, iostat
+        type(node), pointer :: aux
+        type(node_val) :: val
+        
+        aux => self%root%down
+
+
+
+        print *,"Generando matriz dispersa..."
+        open(newunit=unit, file="ImagenNLogico.dot", status='replace', iostat=iostat)
+     
+
+        write(unit, *) "graph matriz {"
+        write(unit, *) "    node [shape=box];"
+
+        write(unit,'(A)') '"Origen" [label="-1", group = 1]'
+
+        !Generacion de encabezados de cada columna
+        do j=0, self%width
+            write(unit,'(A,I0,A,I0,A,I0,A)') '"Col', j, '"[label="', j, '", group =', j+2, ']'
+            if (.not. j == 0) then
+            if (j /= self%width) then
+                write(unit,'(A,I0,A,I0,A)') '"Col', j, '" --  "Col', j+1, '"'
+            end if
+            else
+                write(unit,'(A,I0,A,I0,A)') '"Origen" --  "Col', j, '"'
+                write(unit,'(A,I0,A,I0,A)') '"Col', j, '" --  "Col', j+1, '"'
+            end if
+        end do
+
+        write(unit, *) ' { rank=same; "Origen";'
+
+        do j=0, self%width
+            write(unit, '(A,I0,A)', advance='no') ' "Col', j, '";'
+        end do
+
+        write(unit, *) " }"
+
+        ! Generacion de encabezados de cada Fila
+        do i=0, self%height
+            write(unit,'(A,I0,A,I0,A)') '"Fil', i, '"[label="', i, '", group = 1]'
+            if (.not. i == 0) then
+            if (i /= self%height) then
+                write(unit,'(A,I0,A,I0,A)') '"Fil', i, '" --  "Fil', i+1, '"'
+            end if
+            else
+                write(unit,'(A,I0,A,I0,A)') '"Origen" --  "Fil', i, '"'
+                write(unit,'(A,I0,A,I0,A)') '"Fil', i, '" --  "Fil', i+1, '"'
+            end if
+        end do
+
+        do i = 0, self%height
+            do j = 0, self%width
+                val = self%getValue(i,j)
+                if(.not. val%exists) then
+                    write(unit,'(A,I0,A,I0,A,I0,A)') '"F',i, 'C', j, '" [label=" ", group=',  j+2,']'
+                else
+                    write(unit, '(A,I0,A,I0,A,A,A)') '"F',i, 'C', j, '" [label=" ", style=filled, fillcolor="', &
+                    val%value, '"]'
+                end if
+                if (i == 0 .and. j == 0) then
+                    write(unit,'(A,I0,A,A,I0,A,I0,A)') '"Fil', i, '" -- ', '"F',i, 'C', j, '"'
+                    write(unit,'(A,I0,A,A,I0,A,I0,A)') '"Col', j, '" -- ', '"F',i, 'C', j, '"'
+                else if (i == 0) then
+                    write(unit,'(A,I0,A,A,I0,A,I0,A)') '"Col', j, '" -- ', '"F',i, 'C', j, '"'
+                else if (j == 0) then
+                    write(unit,'(A,I0,A,A,I0,A,I0,A)') '"Fil', i, '" -- ', '"F',i, 'C', j, '"'
+                end if 
+                if (j /= self%width) write(unit,'(A,I0,A,I0,A,A,I0,A,I0,A)') '"F',i, 'C', j, '" -- ' , '"F',i, 'C', j+1, '"'
+                if (i /= self%height) write(unit,'(A,I0,A,I0,A,A,I0,A,I0,A)') '"F',i, 'C', j, '" -- ', '"F',i+1, 'C', j, '"'
+            end do
+
+            write(unit, '(A,I0,A)') ' { rank=same; "Fil', i, '";'
+            do j=0, self%width
+                write(unit, '(A,I0,A,I0,A)', advance='no') '"F',i, 'C', j, '";'
+            end do
+            write(unit, *) "}"
+        end do
+
+        write(unit, *) "}"
+        close(unit)
+
+        call system('dot  -Tpng ImagenNLogico.dot -o ImagenNLogico.png')
+        print *,"Matriz Dispersa graficada con exito"
+        call system('start ImagenNLogico.png')
+    end subroutine graficarNLogico
 end module matriz

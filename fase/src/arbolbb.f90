@@ -1,5 +1,6 @@
 module arbolbb
     use listadoPixeles
+    use linkedlistm
     implicit none
     type, public :: capas
         integer :: id
@@ -17,8 +18,9 @@ module arbolbb
     end type Node_t
 
     type, public :: abb
+        type(linkedlist) :: listado
         type(Node_t), pointer :: root => null()
-
+        integer :: sizeab = 0
     contains
         procedure :: insertabb
         procedure :: delete
@@ -26,10 +28,25 @@ module arbolbb
         procedure :: inorder
         procedure :: posorder
         procedure :: graph
-
+        procedure :: search
+        procedure :: search_recabb
+        procedure :: recorrido
+        procedure :: print_leaf_layers
+        procedure :: depthf
     end type abb
 
 contains   
+    
+    subroutine recorrido(this, tmp)
+        class(abb), intent(inout) :: this
+        class(Node_t), intent(in), pointer :: tmp
+        if( .not. associated(tmp)) then
+            return
+        end if
+        call this%recorrido(tmp%left)
+        call this%recorrido(tmp%right)
+        call this%listado%addlist(tmp%value%id)
+    end subroutine recorrido
 
     subroutine agregarPixel(this, pix)
         class(capas), intent(inout) :: this
@@ -42,7 +59,6 @@ contains
         integer, intent(in) :: newId
         this%id = newId
     end subroutine setId
-
     function getId(this) result(id)
         class(capas), intent(in) :: this
         integer :: id
@@ -56,27 +72,30 @@ contains
         if (.not. associated(self%root)) then
             allocate(self%root)
             self%root%value = val
+            self%sizeab =  1
         else
-            call insertRec(self%root, val)
+            call insertRec(self%root, val,self)
         end if
     end subroutine insertabb
-    recursive subroutine insertRec(root, val)
+    recursive subroutine insertRec(root, val,self)
         type(Node_t), pointer, intent(inout) :: root
         type(capas) , intent(in) :: val
-        
+        class(abb), intent(inout) :: self
         if (val%id < root%value%id) then
             if (.not. associated(root%left)) then
                 allocate(root%left)
                 root%left%value = val
+                self%sizeab = self%sizeab + 1
             else
-                call insertRec(root%left, val)
+                call insertRec(root%left, val,self)
             end if
         else if (val%id > root%value%id) then
             if (.not. associated(root%right)) then
                 allocate(root%right)
                 root%right%value = val
+                self%sizeab = self%sizeab + 1
             else
-                call insertRec(root%right, val)
+                call insertRec(root%right, val,self)
             end if
         end if
     end subroutine insertRec
@@ -167,7 +186,6 @@ contains
 
     subroutine posorder(self)
         class(abb), intent(in) :: self
-        
         call posordenRec(self%root)
         print *, ""
     end subroutine posorder
@@ -266,4 +284,75 @@ contains
         10 format(I0)
     
     end function get_address_memory
+
+    function search(this, idcapa) result(res)
+        class(abb), intent(in) :: this
+        integer, intent(in) :: idcapa
+        type(capas) :: value
+        type(capas), pointer :: res
+        call value%setId(idcapa)
+        res => this%search_recabb(value, this%root)
+    end function search
+
+    recursive function search_recabb(this, value, tmp) result(res)
+        class(abb), intent(in) :: this
+        type(capas), intent(in) :: value
+        type(capas), pointer :: res
+        class(Node_t), intent(in), pointer :: tmp
+        if (.not. associated(tmp)) then
+            write (*, '(A)') 'No se encontro capa0'
+            res => null()
+            return
+        end if
+        if (value%id < tmp%value%id) then
+            res => this%search_recabb(value, tmp%left)
+        else if (value%id > tmp%value%id) then
+            res => this%search_recabb(value, tmp%right)
+        else
+            res => tmp%value
+        end if
+    end function search_recabb
+
+    subroutine print_leaf_layers(this)
+        class(abb), intent(in) :: this
+        type(Node_t), pointer :: current_node
+    
+        print*, "Capas hojas:"
+        current_node => this%root
+        call print_leaf_layers_rec(current_node)
+    end subroutine print_leaf_layers
+    
+    recursive subroutine print_leaf_layers_rec(current_node)
+        type(Node_t), pointer :: current_node
+    
+        if (associated(current_node)) then
+            call print_leaf_layers_rec(current_node%left)
+            if (.not. associated(current_node%left) .and. .not. associated(current_node%right)) then
+                write(*, '(A, I0)') "Capa hoja: ", current_node%value%id
+            end if
+            call print_leaf_layers_rec(current_node%right)
+        end if
+    end subroutine print_leaf_layers_rec
+
+    function depthf(this) result(depth)
+        class(abb), intent(in) :: this
+        integer :: depth
+        depth = depth_rec(this%root)
+    end function depthf
+    
+    recursive function depth_rec(current_node) result(depth)
+        type(Node_t), pointer :: current_node
+        integer :: depth
+        integer :: left_depth, right_depth
+    
+        if (.not. associated(current_node)) then
+            depth = 0
+        else
+            left_depth = depth_rec(current_node%left)
+            right_depth = depth_rec(current_node%right)
+            depth = max(left_depth, right_depth) + 1
+        end if
+    end function depth_rec
+    
+
 end module arbolbb

@@ -30,6 +30,7 @@ module listadoAlbums
         procedure :: getAlbum => getLAlbum
         procedure :: imprimeA => ImprimeLA
         procedure :: eliminarImagenAlbum
+        procedure :: contarImagenes
     end type listaAlbum
 
     contains
@@ -164,7 +165,7 @@ module listadoAlbums
             temp => current%value%imagenes%head
             do while (associated(temp))
                 if (temp%data == id) then
-                    call current%value%imagenes%remove(temp%data)
+                    call current%value%imagenes%removelist(temp%data)
                 end if
                 temp => temp%next
             end do
@@ -177,7 +178,7 @@ module listadoAlbums
     subroutine eliminarImagen(this, img)
             class(album) :: this
             integer, intent(in) :: img
-            call this%imagenes%remove(img)
+            call this%imagenes%removelist(img)
     end subroutine eliminarImagen
 
     subroutine SetName(this, name)
@@ -194,9 +195,38 @@ module listadoAlbums
 
     subroutine ImprimirAlbum(this)
             class(album) :: this
-            print *, 'Album: ', this%nombre
-            print *, 'Images: '
+            write(*,'(A,A)')  'Album: ', this%nombre
+            write(*,'(A)')  'Imagenes: '
             call this%imagenes%print()
     end subroutine ImprimirAlbum
+
+    function contarImagenes(this) result(num_imagenes)
+        class(listaAlbum), intent(in) :: this
+        type(nodoA), pointer :: current
+        type(album), pointer :: current_album
+        type(nodeIMG), pointer :: current_image
+
+        type(linkedlist):: unique_ids ! Lista enlazada auxiliar para almacenar los identificadores únicos
+        logical :: is_unique
+        integer :: num_imagenes
+    
+        num_imagenes = unique_ids%size 
+        current => this%head
+        do while (associated(current))
+            current_album => current%value
+            current_image => current_album%imagenes%head
+            do while (associated(current_image))
+                is_unique = .true.
+                is_unique = unique_ids%searchlist(current_image%data)
+                if (.not. is_unique) then
+                    call unique_ids%addlist(current_image%data)
+                    num_imagenes = num_imagenes + 1
+                end if
+                current_image => current_image%next
+            end do
+            current => current%next
+        end do
+    
+    end function contarImagenes
     
 end module listadoAlbums

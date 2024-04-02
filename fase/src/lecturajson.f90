@@ -72,7 +72,7 @@ module lecturajson
             call json%destroy()
         end subroutine destroy_json
 
-        subroutine cargaMasivaCapas (file_path, tree)
+        subroutine cargaMasivaCapas(file_path, tree)
             character(len=*), intent(in) :: file_path
             type(abb),intent (inout) :: tree
             type(pixel) :: temp_pixel,new_pixel
@@ -81,7 +81,7 @@ module lecturajson
             call load_json(file_path)
             
             do i = 1, sizej
-                !temp_capa = new_capa
+                temp_capa = new_capa
                 call jsonc%get_child(listP, i, tempP, found=found)
                 if ( found ) then
 
@@ -152,6 +152,7 @@ module lecturajson
                         call jsonc%get(caracP, tempInt)
                         do j = 1, size(tempInt)
                             call temp_image%agregarNodoIdCapas(tempInt(j))
+                            call temp_image%agregarcapa(tempInt(j))
                         end do
                     end if
                 end if

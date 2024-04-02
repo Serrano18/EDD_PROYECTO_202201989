@@ -4,6 +4,19 @@ module arbolb
     
       	! Order 5
     integer, parameter :: MAXI = 4, MINI = 2 
+    type :: node_queue
+        type(BTreeNode), pointer :: node
+        type(node_queue), pointer :: next => null()
+    end type node_queue
+
+    type :: queue
+        type(node_queue), pointer :: head => null()
+        type(node_queue), pointer :: tail => null()
+    contains
+        procedure :: enqueue
+        procedure :: dequeue
+        procedure :: isEmpty
+    end type queue
 
     type nodeptr
         type (BTreeNode), pointer :: ptr => null()
@@ -22,10 +35,70 @@ module arbolb
         procedure :: graphTree
         procedure :: searchUser
         procedure :: searchUserByNameAndPassword
+        procedure :: recorridopornivel
     end type BTreeNode
 
     
 contains
+subroutine recorridopornivel (this)
+    class(BTreeNode), intent(in) :: this
+    type(queue) :: q
+    type(BTreeNode), pointer :: temp
+    type(User), pointer :: usua
+    integer :: i
+    if (.not. associated(this%root)) then
+        print *, "El arbol esta vacio"
+        return
+    end if
+    call q%enqueue(this%root)
+    do while (.not. q%isEmpty())
+        temp => q%dequeue()
+        do i = 1, temp%num
+            usua => temp%val(i)
+            write(*, '(A,A,A,I0)') 'Nombre: ', trim(usua%nombre) , ' DPI: ', usua%dpi
+            write(*, '(A,I0)')  ' Total de Imagenes en el arbol: ', usua%arbolDeImagenes%num
+        end do
+        do i = 0, temp%num
+            if (associated(temp%link(i)%ptr)) then
+                call q%enqueue(temp%link(i)%ptr)
+            end if
+        end do
+    end do
+end subroutine recorridopornivel
+
+subroutine enqueue(this, node)
+    class(queue), intent(inout) :: this
+    type(BTreeNode), pointer, intent(in) :: node
+    type(node_queue), pointer :: new_node
+    allocate(new_node)
+    new_node%node => node
+    if (.not. associated(this%head)) then
+        this%head => new_node
+    else
+        this%tail%next => new_node
+    end if
+    this%tail => new_node
+end subroutine enqueue
+
+function dequeue(this) result(node)
+    class(queue), intent(inout) :: this
+    type(BTreeNode), pointer :: node
+    type(node_queue), pointer :: temp
+    if (associated(this%head)) then
+        node => this%head%node
+        temp => this%head
+        this%head => this%head%next
+        deallocate(temp)
+    else
+        node => null()
+    end if
+end function dequeue
+
+function isEmpty(this) result(res)
+    class(queue), intent(in) :: this
+    logical :: res
+    res = .not. associated(this%head)
+end function isEmpty
 
 subroutine graphTree(this)
     class(BTreeNode), intent(in) :: this
@@ -298,7 +371,7 @@ recursive subroutine remove(nodo, dpi)
                 call remove(nodo%link(i-1)%ptr, dpi)
             end if
     else
-            print *, "Client not found"
+            print *, "Usuario no encontrado"
     end if
 end subroutine remove
 

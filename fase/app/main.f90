@@ -3,8 +3,10 @@ program main
   use arbolb
   use arbolavl
   use lecturajson
-  use linkedlistm
+  use linkedlistm, only: linkedlist,nodolistado=>node
   use listadoAlbums, nodoAlbum => nodoA
+  use listadoPixeles, only: pixel, nodoPixel =>nodop
+  use matriz, only:matrix
   implicit none
   type(User) :: nuevoCliente
   type(User),pointer :: usuarioActual
@@ -15,6 +17,7 @@ program main
   character(len=1) :: opcion
   integer :: esValido
   type(BTreeNode) :: Usuarios
+  type(matrix) :: trabajarMatriz
   character (len=256 ) :: archivo
 
   do 
@@ -122,6 +125,7 @@ program main
             read *, archivo
             call cargaMasivaAlbums(archivo,usuarioActual%listadoDeAlbums)
           case ('6')
+            call reportesUsuarios()
           case ('7')
             print *, "Gracias por tu visita"
             exit
@@ -144,7 +148,8 @@ program main
             write(*, '(A)') "| 3. Modificar Usuario                    |"
             write(*, '(A)') "| 4. Eliminar Usuario                     |"
             write(*, '(A)') "| 5. Carga Masiva Usuario                 |"
-            write(*, '(A)') "| 6. Cerrar Sesion                        |"  
+            write(*, '(A)') "| 6. Reportes Administrador               |"
+            write(*, '(A)') "| 7. Cerrar Sesion                        |"  
             write(*, '(A)') "|-----------------------------------------|"
             write(*, '(A)') "Ingrese el numero de opcion"
               read *, opca
@@ -200,6 +205,8 @@ program main
                 read *, archivo
                 call cargaMasivaUsuarios(archivo,Usuarios)
               case ('6')
+                 call reportesAdministrador()
+              case ('7')
                   print *, "Gracias por tu visita"
                   exit
               case default
@@ -211,6 +218,8 @@ program main
       !me falta graficar capas
     subroutine menuestructuras ()
       character(len=1) :: opce
+      type(capas),pointer :: temp_capa
+      type(nodoPixel), pointer :: pxI
       integer :: imgseleccionada
          do 
              print *, "" 
@@ -234,8 +243,25 @@ program main
                case ('3')
                   call usuarioActual%listadoDeAlbums%graficarA
                case ('4')
- 
+                write(*, '(A)') "Listado de Capas"
+                call usuarioActual%arbolDeCapas%preorder()
+                write(*, '(A)') "Ingrese el id de la Capa a observar"
+                read *, i
+                temp_capa => usuarioActual%arbolDeCapas%search(i)
+                if ( associated(temp_capa) ) then
+                  pxI => temp_capa%listadoDePixeles%head
+                  !call temp_capa%listadoDePixeles%print()
+                  usuarioActual%mimagenes = trabajarMatriz
+                  do while ( associated(pxI) )
+                      call usuarioActual%mimagenes%insert(pxI%value%fila, pxI%value%columna, pxI%value%color)
+                      pxI => pxI%next
+                  end do
+                  call usuarioActual%mimagenes%graficarNLogico()
+                end if
                case ('5')
+                write(*, '(A)') "Listado de Imagenes"
+                call usuarioActual%arbolDeImagenes%preorden()
+                write(*,'(A)') " "
                 write(*, '(A)') "Ingrese el id de la Imagen a observar"
                 read *, imgseleccionada
                 call usuarioActual%arbolDeImagenes%graficarArbolDeCapasDeImagen(imgseleccionada)
@@ -271,69 +297,272 @@ program main
       type(Imagen) :: temp_imag,new_imag
       type(linkedlist) :: temp_lista,new_lista
       integer :: imgseleccionada
-         do 
+      character(len=1)::b
+     do 
+        print *, "" 
+        write(*, '(A)') "|-----------------------------------------|"
+        write(*, '(A)') "|     Pixel Print Studio Navegacion       |"
+        write(*, '(A)') "|-----------------------------------------|"
+        write(*, '(A)') "| 1. Registrar Imagen                     |" 
+        write(*, '(A)') "| 2. Eliminar Imagen                      |"     
+        write(*, '(A)') "| 3. Generar Imagen por recorrido limitado|"     
+        write(*, '(A)') "| 4. Generar Imagen por arbol de imagenes |"     
+        write(*, '(A)') "| 5. Generar Imagen por Capas             |"
+        write(*, '(A)') "| 6. Regresar                             |"  
+        write(*, '(A)') "|-----------------------------------------|"
+        write(*, '(A)') "Ingrese el numero de opcion"
+        read *, opce
+        temp_imag=new_imag
+        temp_lista = new_lista
+        select case (opce)
+         case ('1')
+            write(*, '(A)') "|-----------------------------------------|"
+            write(*, '(A)') "|             REGISTRAR IMAGEN            |"
+            write(*, '(A)') "|-----------------------------------------|"
+            write(*, '(A)') "Ingrese el ID de la Imagen: "
+            read *, temp_imag%id
+            write(*, '(A)') "Registro de capas para Imagen !NUMEROS  (Para salir ingresa -1)"
+            do while(.true.)
+              write (*, '(A)') "Ingrese el ID de la capa: "
+              read (*, *) i
+              if (i >= 0) then
+                call temp_imag%agregarcapa(i)
+                call temp_imag%arbolIdCapas%add(i)
+              else if (i == -1) then
+                exit
+              end if
+            end do
+            call usuarioActual%arbolDeImagenes%insertavl(temp_imag)
+         case ('2')
+            write(*, '(A)') "|-----------------------------------------|"
+            write(*, '(A)') "|             ELIMINAR IMAGEN             |"
+            write(*, '(A)') "|-----------------------------------------|"
+            write(*, '(A)') "Listado de Imagenes"
+            call usuarioActual%arbolDeImagenes%preorden()
+            write(*,'(A)') " "
+            write (*, '(A)') "Ingrese el ID de la Imagen: "
+            read (*, *) i
+            imagenActual=> usuarioActual%arbolDeImagenes%searchavl(i)
+            if(associated(imagenActual))then
+              call usuarioActual%arbolDeImagenes%deleteavl(imagenActual)
+              call usuarioActual%listadoDeAlbums%eliminarImagenAlbum(i)
+              print *, "Imagen eliminada con exito"
+            else
+              print *, "La imagen no existe"
+            end if 
+          case ('3')
+            write(*, '(A)') "|-----------------------------------------|"
+            write(*, '(A)') "|  Generar Imagen por recorrido limitado  |" 
+            write(*, '(A)') "|-----------------------------------------|"
+            write(*, '(A)') " Listado de Imagenes : "
+            call usuarioActual%arbolDeImagenes%preorden()
+            write(*,'(A)') "Ingresa el id de la Imagen: "
+            read *, i
+            imagenActual=>usuarioActual%arbolDeImagenes%searchavl(i)
+            if(associated(imagenActual)) then 
+              write(*, '(A)') " Listado de capas de la imagen: "
+              call imagenActual%arbolIdCapas%inorder(imagenActual%arbolIdCapas%root)
+              write(*,'(A,I0)') "Numero de Capas disponibles: ", imagenActual%arbolIdCapas%list%size
+              write(*,'(A)') "Ingrese el numero de capas a utilizar: "
+              read *, i
+              if (i>0 .or. i<imagenActual%arbolIdCapas%list%size) then
+                write(*,'(A)') "Recorridos"
+                write(*,'(A)') "1. Preorden"
+                write(*,'(A)') "2. Inorden"
+                write(*,'(A)') "3. Postorden"
+                write(*,'(A)') "Ingrese la opcion: "
+                read *, b
+                select case(b)
+                  case("1")
+                    print*, "Generando Imagen por preorden"
+                    call imagenActual%arbolIdCapas%preorder(imagenActual%arbolIdCapas%root)
+                    temp_lista = imagenActual%arbolIdCapas%list
+                    call crearImagen(temp_lista,i)
+                    call imagenActual%arbolIdCapas%generarTextAreaRecorridos()
+                  case("2")
+                    print*, "Generando imagen por Inorden"
+                    call imagenActual%arbolIdCapas%inorder(imagenActual%arbolIdCapas%root)
+                    temp_lista = imagenActual%arbolIdCapas%list
+                    call crearImagen(temp_lista,i)
+                    call imagenActual%arbolIdCapas%generarTextAreaRecorridos()
+                  case("3")
+                    print *, "Generando imagen por Postorden"
+                    call imagenActual%arbolIdCapas%postorder(imagenActual%arbolIdCapas%root)
+                    temp_lista = imagenActual%arbolIdCapas%list
+                    call crearImagen(temp_lista,i)
+                    call imagenActual%arbolIdCapas%generarTextAreaRecorridos()
+                  case default
+                    write(*,'(A)') "Recorrido no Valido"
+                  end select
+              end if
+            else
+              print *, "Id de imagen no encontrado"
+            end if
+          case ('4')    
+            write(*, '(A)') "|-----------------------------------------|"
+            write(*, '(A)') "|  Generar Imagen por Arbol de Imagenes   |" 
+            write(*, '(A)') "|-----------------------------------------|"
+            write(*, '(A)') " Listado de Imagenes : "
+            call usuarioActual%arbolDeImagenes%preorden()
+            write(*,'(A)') "Ingresa el id de la Imagen: "
+            read *, i
+            imagenActual=>usuarioActual%arbolDeImagenes%searchavl(i)
+            if(associated(imagenActual)) then
+              imagenActual%arbolIdCapas%list = new_lista
+              call imagenActual%arbolIdCapas%amplitude()
+              temp_lista = imagenActual%arbolIdCapas%list
+              print *, "----------Amplitud----------"
+              call crearImagen(temp_lista,temp_lista%size)
+            else
+              print *, "Imagen no encontrada"
+            end if
+          case ('5')
+            write(*, '(A)') "|-----------------------------------------|"
+            write(*, '(A)') "|       Generar Imagen por Capas          |" 
+            write(*, '(A)') "|-----------------------------------------|"
+            write(*, '(A)') " Listado de capas: "
+            call usuarioActual%arbolDeCapas%preorder()
+            do while (.true.)
+              write (*, '(A)') "Ingresa los id de las capas: (Salir con -1) "
+              read (*, *) i
+              if (i >= 0) then
+                if ( associated(usuarioActual%arbolDeCapas%search(i)) ) then
+                  call temp_lista%addlist(i)
+                end if
+              else if (i == -1) then
+                exit
+              end if
+            end do
+            call crearImagen(temp_lista,temp_lista%size)
+          case ('6')
+                   exit
+          case default
+                 print *, "Opcion no valida. Por favor, intente de nuevo."
+        end select   
+      end do
+    end subroutine navegacion
+    
+    subroutine crearImagen (listatemporal,num)
+      type(linkedlist),intent(in)::listatemporal
+      type(nodoPixel),pointer :: tempxl
+      type(capas),pointer :: temporalcapas
+      type(nodolistado),pointer :: temporalnlista
+      integer :: num, a
+      usuarioActual%mimagenes = trabajarMatriz
+      call listatemporal%print
+      if ( listatemporal%size > 0 ) then
+        temporalnlista => listatemporal%head
+        do a=1,num
+          temporalcapas => usuarioActual%arbolDeCapas%search(temporalnlista%data)
+          !print *,"no entro"
+          if(associated(temporalcapas))then
+           ! print *, "entro"
+            write(*,'(I0)') temporalcapas%id
+            if ( a < num ) then
+              write(*, '(A)') " , "
+            else
+              write(*, *) ""
+           end if
+           tempxl => temporalcapas%listadoDePixeles%head
+           
+           do while ( associated(tempxl) )
+            !  print *, "entro2"
+          !    write(*,'(A,I0,A,I0,A,A)') "FILA: ",tempxl%value%fila, &
+           !    " COLUMNA: ", tempxl%value%columna," COLOR: ",tempxl%value%color
+              call usuarioActual%mimagenes%insert(tempxl%value%fila, tempxl%value%columna, tempxl%value%color)
+            !  print *, "lo crea"
+              tempxl => tempxl%next
+             ! print *, "siguiente"
+           end do
+           !print *, "salio"
+          end if
+          temporalnlista => temporalnlista%next
+          !print*, "asignolista"
+        end do
+      end if
+      call usuarioActual%mimagenes%graphMatrix()
+    end subroutine crearImagen
+
+    subroutine reportesAdministrador
+      character(len=1) :: opce
+      type(linkedlist) :: new_lista
+      integer :: totalimagenesalbum   
+      do 
              print *, "" 
              write(*, '(A)') "|-----------------------------------------|"
-             write(*, '(A)') "|     Pixel Print Studio Navegacion       |"
+             write(*, '(A)') "|     Pixel Print Studio Reportes AD      |"
              write(*, '(A)') "|-----------------------------------------|"
-             write(*, '(A)') "| 1. Registrar Imagen                     |" 
-             write(*, '(A)') "| 2. Eliminar Imagen                      |"     
-             write(*, '(A)') "| 3. Generar Imagen por ruta              |"     
-             write(*, '(A)') "| 4. Generar Imagen por arbol             |"     
-             write(*, '(A)') "| 5. Generar Imagen por Capas             |"
-             write(*, '(A)') "| 6. Regresar                             |"  
+             write(*, '(A)') "| 1. Buscar Usuario                       |" 
+             write(*, '(A)') "| 2. Listado de Usuarios                 |"     
+             write(*, '(A)') "| 3. Regresar                             |"  
              write(*, '(A)') "|-----------------------------------------|"
              write(*, '(A)') "Ingrese el numero de opcion"
-             read *, opce
-              temp_imag=new_imag
-              temp_lista = new_lista
-              select case (opce)
+               read *, opce
+               select case (opce)
                case ('1')
-                write(*, '(A)') "|-----------------------------------------|"
-                write(*, '(A)') "|             REGISTRAR IMAGEN            |"
-                write(*, '(A)') "|-----------------------------------------|"
-                write(*, '(A)') "Ingrese el ID de la Imagen: "
-                read *, temp_imag%id
-                write(*, '(A)') "Registro de capas para Imagen !NUMEROS  (Para salir ingresa -1)"
-                do while(.true.)
-                  write (*, '(A)') "Ingrese el ID de la capa: "
-                  read (*, *) i
-                  if (i > 0) then
-                      call temp_imag%agregarcapa(i)
-                      call temp_imag%arbolIdCapas%add(i)
-                  else if (i == -1) then
-                      exit
-                  end if
-                end do
-                call usuarioActual%arbolDeImagenes%insertavl(temp_imag)
-               case ('2')
-                write(*, '(A)') "|-----------------------------------------|"
-                write(*, '(A)') "|             ELIMINAR IMAGEN             |"
-                write(*, '(A)') "|-----------------------------------------|"
-                write(*, '(A)') "Listado de Imagenes"
-                call usuarioActual%arbolDeImagenes%preorden()
-                write(*,'(A)') " "
-                write (*, '(A)') "Ingrese el ID de la Imagen: "
-                read (*, *) i
-                imagenActual=> usuarioActual%arbolDeImagenes%searchavl(i)
-                if(associated(imagenActual))then
-                    call usuarioActual%arbolDeImagenes%deleteavl(imagenActual)
-                    call usuarioActual%listadoDeAlbums%eliminarImagenAlbum(i)
-                    print *, "Imagen eliminada con exito"
-                else
-                    print *, "La imagen no existe"
+                write(*, '(A)') "Ingrese el dpi del Usuario"
+                read *, dpi
+                usuarioActual => Usuarios%searchUser(dpi)
+                if (associated(usuarioActual)) then
+                  write(*,'(A,I0,A)') "---------Datos Usuario ",dpi," ---------- "
+                  print *, "---------Datos Principales---------- "
+                 call usuarioActual%imprimirDatos()
+                 print *, "---------Listado de Albums---------- "
+                 write(*,'(A,I0)') "Cantidad Total de albums: ",usuarioActual%listadoDeAlbums%size
+                 call usuarioActual%listadoDeAlbums%imprimeA()
+                 write(*,'(A,I0)')  "Cantidad de Imagenes en el arbol: ", usuarioActual%arbolDeImagenes%num
+                 totalimagenesalbum= usuarioActual%listadoDeAlbums%contarImagenes()
+                 write(*,'(A,I0)')  "Cantidad de Imagenes en los Albums ", totalimagenesalbum
+                 usuarioActual%arbolDeCapas%listado = new_lista
+                 call usuarioActual%arbolDeCapas%recorrido(usuarioActual%arbolDeCapas%root)
+                 write(*,'(A,I0)') "Capas por arbol de usuario: ",usuarioActual%arbolDeCapas%listado%size
                 end if
+               case ('2')
+                call Usuarios%recorridopornivel()
                case ('3')
-                  
-               case ('4')
- 
-               case ('5')
-
-               case ('6')
                    exit
                case default
                  print *, "Opcion no valida. Por favor, intente de nuevo."
                end select   
          end do
-    end subroutine navegacion
+    end subroutine reportesAdministrador
+
+    
+    subroutine reportesUsuarios
+      character(len=1) :: opce
+      do 
+             print *, "" 
+             write(*, '(A)') "|-------------------------------------------------------|"
+             write(*, '(A)') "|         Pixel Print Studio Reportes De Usuario        |"
+             write(*, '(A)') "|-------------------------------------------------------|"
+             write(*, '(A)') "| 1. Top 5 de imagenes con mas numero de capas          |" 
+             write(*, '(A)') "| 2. Todas las capas que son hojas                      |"
+             write(*, '(A)') "| 3. Profundidad de arbol de capas                      |"    
+             write(*, '(A)') "| 4. Listar las capas en: preorden, inorden, postorden  |" 
+             write(*, '(A)') "| 5. Regresar                                           |"  
+             write(*, '(A)') "|-------------------------------------------------------|"
+             write(*, '(A)') "Ingrese el numero de opcion"
+               read *, opce
+               select case (opce)
+               case ('1')
+                  call usuarioActual%arbolDeImagenes%top5()
+               case ('2')
+                  call usuarioActual%arbolDeCapas%print_leaf_layers()
+               case ('3')
+                  write(*,'(A,I0)') "La profundidad del arbol de capas es: ", usuarioActual%arbolDeCapas%depthf()
+               case ('4')
+                  call usuarioActual%arbolDeCapas%graph("ArbolDeCapas")
+                  write(*,'(A)') "Listado de Capas en Preorden"
+                  call usuarioActual%arbolDeCapas%preorder()
+                  write(*,'(A)')"Listado de Capas en Inorden"
+                  call usuarioActual%arbolDeCapas%inorder()
+                  write(*,'(A)')"Listado de Capas en Posorden"
+                  call usuarioActual%arbolDeCapas%posorder()
+               case ('5')
+                   exit
+               case default
+                 print *, "Opcion no valida. Por favor, intente de nuevo."
+               end select   
+         end do
+    end subroutine reportesUsuarios
 end program main

@@ -34,8 +34,7 @@ module abbidm
         procedure :: preorder
         procedure :: inorder
         procedure :: postorder
-        procedure :: dotgen
-        procedure :: dotgen2
+        procedure :: generarTextAreaRecorridos
         procedure :: dotgen_rec
         procedure :: delete
         procedure :: delete_rec
@@ -125,85 +124,72 @@ module abbidm
         subroutine preorder(this, tmp)
             class(abbid), intent(inout) :: this
             class(node), intent(in), pointer :: tmp
-            if( .not. associated(tmp)) then
-                return
+            if( associated(tmp)) then
+                call this%list%addlist(tmp%value) ! Visitar la raíz
+                call this%preorder(tmp%left)      ! Recorrer el subárbol izquierdo
+                call this%preorder(tmp%right)     ! Recorrer el subárbol derecho
             end if
-            call this%list%addlist(tmp%value)
-            call this%preorder(tmp%left)
-            call this%preorder(tmp%right)
+
         end subroutine preorder
 
         subroutine inorder(this, tmp)
             class(abbid), intent(inout) :: this
             class(node), intent(in), pointer :: tmp
-            if( .not. associated(tmp)) then
-                return
+            if( associated(tmp)) then
+                call this%inorder(tmp%left) ! Recorrer el subárbol izquierdo
+                call this%list%addlist(tmp%value) ! Visitar la raíz
+                call this%inorder(tmp%right) ! Recorrer el subárbol derecho
             end if
-            call this%inorder(tmp%left)
-
-            call this%list%addlist(tmp%value)
-            call this%inorder(tmp%right)
         end subroutine inorder
 
         subroutine postorder(this, tmp)
             class(abbid), intent(inout) :: this
             class(node), intent(in), pointer :: tmp
-            if( .not. associated(tmp)) then
-                return
+            if(associated(tmp)) then
+                call this%postorder(tmp%left)! Recorrer el subárbol izquierdo
+                call this%postorder(tmp%right) ! Recorrer el subárbol derecho
+                call this%list%addlist(tmp%value) ! Visitar la raíz
             end if
-            call this%postorder(tmp%left)
-            call this%postorder(tmp%right)
 
-            call this%list%addlist(tmp%value)
         end subroutine postorder
 
-        subroutine dotgen2(this)
+        subroutine generarTextAreaRecorridos(this)
             class(abbid), intent(inout) :: this
             integer :: unit
-            character(len=100) :: filename = "img/abbtree.dot"
-            character(len=:), allocatable :: temp
+            character(len=100) :: filename = "arbolbid.dot"
+            character(len=:), allocatable :: cadena
 
-            temp = "Preorder: "
+            cadena = "Preorden: "
+            call this%list%clear()
             call this%preorder(this%root)
             do while (associated(this%list%head))
-                temp = trim(temp) // ' ' // int_to_string(this%list%head%data)
-                call this%list%remove(this%list%head%data)
+                cadena = trim(cadena) // ' ' // int_to_string(this%list%head%data)
+                call this%list%removelist(this%list%head%data)
             end do
-            temp = trim(temp) // '\nInorder: '
+            cadena = trim(cadena) // '\nInorden: '
             call this%inorder(this%root)
             do while (associated(this%list%head))
-                temp = trim(temp) // ' ' // int_to_string(this%list%head%data)
-                call this%list%remove(this%list%head%data)
+                cadena = trim(cadena) // ' ' // int_to_string(this%list%head%data)
+                call this%list%removelist(this%list%head%data)
             end do
-            temp = trim(temp) // '\nPostorder: '
+            cadena = trim(cadena) // '\nPostorden: '
             call this%postorder(this%root)
             do while (associated(this%list%head))
-                temp = trim(temp) // ' ' // int_to_string(this%list%head%data)
-                call this%list%remove(this%list%head%data)
+                cadena = trim(cadena) // ' ' // int_to_string(this%list%head%data)
+                call this%list%removelist(this%list%head%data)
             end do
             open(unit, file=filename, status='replace')
-            write(unit, '(A)') 'graph{'
-            write(unit, '(A)') 'info [label="' // temp // '"];'
-            write(unit, '(A)') 'info -- ' // int_to_string(this%root%uid) // ';'
+            write(unit, '(A)') 'digraph G {'
+            write(unit, '(A,A,A)') 'info [label="',trim(cadena),'", shape="box"];'
+            !write(unit,'(A)') "info -> imagen"
+            write(unit,'(A)')'imagen [label="Arbol de capas Imagen Seleccionada", shape="box"];'
+            write(unit, '(A,A,A)') 'imagen -> l',trim(int_to_string(this%root%uid)),';'
             call this%dotgen_rec(this%root, unit)
             write(unit, '(A)') '}'
             close(unit)
-            call execute_command_line('dot -Tsvg img/abbtree.dot > img/abbtree.svg')
-            call execute_command_line('eog img/abbtree.svg')
-        end subroutine dotgen2
-
-        subroutine dotgen(this)
-            class(abbid), intent(in) :: this
-            integer :: unit
-            character(len=100) :: filename = "img/abbtree.dot"
-            open(unit, file=filename, status='replace')
-            write(unit, '(A)') 'graph{'
-            call this%dotgen_rec(this%root, unit)
-            write(unit, '(A)') '}'
-            close(unit)
-            call execute_command_line('dot -Tsvg img/abbtree.dot > img/abbtree.svg')
-            call execute_command_line('eog img/abbtree.svg')
-        end subroutine dotgen
+            call execute_command_line('dot -Tsvg arbolbid.dot > arbolbid.svg')
+            call execute_command_line('start arbolbid.svg')
+        end subroutine generarTextAreaRecorridos
 
         subroutine dotgen_rec(this, tmp, unit)
             class(abbid), intent(in) :: this
@@ -278,7 +264,7 @@ module abbidm
             class(node), intent(in), pointer :: tmp
             integer, pointer :: res
             if (.not. associated(tmp)) then
-                write (*, '(A)') 'Not found'
+                write (*, '(A)') 'No se encontro'
                 res => null()
                 return
             end if

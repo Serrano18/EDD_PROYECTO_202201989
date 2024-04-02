@@ -13,13 +13,14 @@ module linkedlistm
         type(node), pointer :: tail => null()
     contains
         procedure :: addlist
-        procedure :: remove
-        procedure :: search
+        procedure :: removelist
+        procedure :: searchlist
         procedure :: print
+        procedure :: clear
     end type linkedlist
 contains
 
-    subroutine remove(this, value)
+    subroutine removelist(this, value)
         class(linkedlist), intent(inout) :: this
         integer, intent(in) :: value
         type(node), pointer :: current_node
@@ -45,7 +46,7 @@ contains
             end if
             current_node => current_node%next
         end do
-    end subroutine remove
+    end subroutine removelist
 
 
     subroutine addlist(this, value)
@@ -53,7 +54,7 @@ contains
         integer, intent(in) :: value
         type(node), pointer :: new_node
 
-        if ( this%search(value) ) then
+        if ( this%searchlist(value) ) then
             return
         end if
 
@@ -86,7 +87,7 @@ contains
         end do
     end subroutine print
 
-    function search(this, value) result(found)
+    function searchlist(this, value) result(found)
         class(linkedlist), intent(in) :: this
         integer, intent(in) :: value
         type(node), pointer :: current_node
@@ -101,6 +102,21 @@ contains
             current_node => current_node%next
         end do
         found = .false.
-    end function search
+    end function searchlist
+
+    subroutine clear(this)
+        class(linkedlist), intent(inout) :: this
+        type(node), pointer :: current_node, next_node
+
+        current_node => this%head
+        do while (associated(current_node))
+            next_node => current_node%next
+            deallocate(current_node)
+            current_node => next_node
+        end do
+        this%head => null()
+        this%tail => null()
+        this%size = 0
+    end subroutine clear
 
 end module linkedlistm
