@@ -1,0 +1,142 @@
+Terminales:
+
+DOUBLE, NUMBER, IF, ELSE, LLAVEIZQ, LLAVEDER, COUT, INSERTION, SALTOCOUT, TOLOWER, TOUPPER, ROUND, LENGTH, TYPEOF, TOSTRING, CSTR, SADM, MASD, MEND, DO, WHILE, FOR, BREAK, CONTINUE, RETURN, SWITCH, CASE, DEFAULT, EXECUTE, VOID, PARIZQ, PARDER, CORIZQ, CORDER, NEW, MAS, RES, MUL, DIV, PYC, PF, CM, DP, MOD, POW, IGUAL, DISTINTO, MENORIGUAL, MENOR, MAYORIGUAL, MAYOR, ASIGNACION, AND, OR, NOT, CADENA, CARACTER, TRUE, FALSE, TIPOD, ID
+
+Inicio con ini 
+<ini> ::= <instrucciones> EOF
+
+<instrucciones> ::= <instrucciones> <instruccion> | <instruccion>
+
+<instruccion> ::= <fn_cout> PYC
+                | <fn_if>
+                | <variables>
+                | <subebaja> PYC
+                | <fn_dowhile> PYC
+                | <fn_while>
+                | <fn_for>
+                | <fn_switch>
+                | RETURN <expresion> PYC
+                | RETURN PYC
+                | BREAK PYC
+                | CONTINUE PYC
+                | <declaracioVectores> PYC
+                | <modivectores> PYC
+                | <fn_funciones>
+                | <metodos>
+                | <fn_execute> PYC
+                | <ll_instruccion> PYC
+
+<fn_execute> ::= EXECUTE <ll_expresion>
+
+<fn_funciones> ::= TIPOD ID "(" <lista_parametros> ")" <bloque>
+
+<metodos> ::= VOID ID "(" <lista_parametros> ")" <bloque>
+
+<lista_parametros> ::= <parametros> | ε
+
+<parametros> ::= <parametros> "," <forma_parametros> | <forma_parametros>
+
+<forma_parametros> ::= TIPOD ID | TIPOD ID "[" "]" | TIPOD ID "[" "]" "[" "]"
+
+<ll_expresion> ::= ID "(" <pllamadas> ")"
+
+<ll_instruccion> ::= ID "(" <pllamadas> ")"
+
+<pllamadas> ::= ε | <listado_pllamadas>
+
+<listado_pllamadas> ::= <listado_pllamadas> "," <expresion> | <expresion>
+
+<modivectores> ::= ID "[" <expresion> "]" "=" <expresion> | ID "[" <expresion> "]" "[" <expresion> "]" "=" <expresion>
+
+<declaracioVectores> ::= TIPOD ID "[" "]" "=" NEW TIPOD "[" <expresion> "]" 
+| TIPOD ID "[" "]" "[" "]" "=" NEW TIPOD "[" <expresion> "]" "[" <expresion> "]" | TIPOD ID "[" "]" "=" <repeti> 
+| TIPOD ID "[" "]" "[" "]" "=" "[" <valores> "]"
+
+<cstre> ::= <expresion> PF CSTR "(" ")"
+
+<repeti> ::= <cstre> | "[" <listavalores> "]"
+
+<valores> ::= <valores> "," <repeti> | <repeti>
+
+<listavalores> ::= <listavalores> "," <expresion> | <expresion>
+
+<fn_switch> ::= SWITCH "(" <expresion> ")" "{" <caselist> <fn_default> "}"
+
+<caselist> ::= <caselista> | ε
+
+<caselista> ::= <caselista> <cases> | <cases>
+
+<cases> ::= CASE <expresion> ":" <instrucciones>
+
+<fn_default> ::= DEFAULT ":" <instrucciones> | ε
+
+<variables> ::= <fn_dvariables> ";" | <avariables> ";"
+
+<fn_for> ::= FOR "(" <variables> <expresion> ";" <actualizacion> ")" <bloque>
+
+<actualizacion> ::= <subebaja> | <avariables>
+<fn_while> ::= WHILE "(" <expresion> ")" <bloque>
+
+<fn_dowhile> ::= DO <bloque> WHILE "(" <expresion> ")"
+
+<expresion> ::= RES <expresion> %prec UMINUS
+              | <expresion> MAS <expresion>
+              | <expresion> RES <expresion>
+              | <expresion> MUL <expresion>
+              | <expresion> DIV <expresion>
+              | <expresion> MOD <expresion>
+              | POW "(" <expresion> CM <expresion> ")"
+              | <relacionales>
+              | <logicos>
+              | NUMBER
+              | DOUBLE
+              | TRUE
+              | FALSE
+              | CADENA
+              | CARACTER
+              | "(" <expresion> ")"
+              | TOLOWER "(" <expresion> ")"
+              | TOUPPER "(" <expresion> ")"
+              | ROUND "(" <expresion> ")"
+              | TOSTRING "(" <expresion> ")"
+              | <expresion> SADM <expresion> DP <expresion>
+              | "(" TIPOD ")" <expresion>
+              | ID
+              | <expresion> PF LENGHT "(" ")"
+              | TYPEOF "(" <expresion> ")"
+              | ID "[" <expresion> "]"
+              | ID "[" <expresion> "]" "[" <expresion> "]"
+              | <ll_expresion>
+<avariables> ::= ID ASIGNACION <expresion>
+
+<subebaja> ::= ID MASD
+             | ID MEND
+
+<relacionales> ::= <expresion> IGUAL <expresion>
+                 | <expresion> DISTINTO <expresion>
+                 | <expresion> MENOR <expresion>
+                 | <expresion> MENORIGUAL <expresion>
+                 | <expresion> MAYOR <expresion>
+                 | <expresion> MAYORIGUAL <expresion>
+
+<logicos> ::= <expresion> AND <expresion>
+            | <expresion> OR <expresion>
+            | NOT <expresion>
+
+<fn_dvariables> ::= TIPOD <listavar> <findeclaracion>
+
+<listavar> ::= <listavar> CM ID
+             | ID
+
+<findeclaracion> ::= ε
+                   | ASIGNACION <expresion>
+
+<fn_cout> ::= COUT '<<' <expresion>
+            | COUT '<<' <expresion> '<<' SALTOCOUT
+
+<bloque> ::= LLAVEIZQ <instrucciones> LLAVEDER
+           | LLAVEIZQ LLAVEDER
+
+<fn_if> ::= IF PARIZQ <expresion> PARDER <bloque>
+          | IF PARIZQ <expresion> PARDER <bloque> ELSE <bloque>
+          | IF PARIZQ <expresion> PARDER <bloque> ELSE <fn_if>
