@@ -1,0 +1,42 @@
+[
+    {
+        "dpi": "3663830780101",
+        "nombre": "Juan",
+        "apellido": "Perez",
+        "genero": "Masculino",
+        "direccion": "Ciudad",
+        "telefono": "12345678"
+    },
+    {
+        "dpi": "3663830780102",
+        "nombre": "Maria",
+        "apellido": "Gonzalez",
+        "genero": "Femenino",
+        "direccion": "Ciudad",
+        "telefono": "12345678"
+    },
+    {
+        "dpi": "3663830780103",
+        "nombre": "Pedro",
+        "apellido": "Rodriguez",
+        "genero": "Masculino",
+        "direccion": "Ciudad",
+        "telefono": "12345678"
+    },
+    {
+        "dpi": "3663830780104",
+        "nombre": "Jose",
+        "apellido": "Hernandez",
+        "genero": "Masculino",
+        "direccion": "Ciudad",
+        "telefono": "12345678"
+    },
+    {
+        "dpi": "3663830780105",
+        "nombre": "Ana",
+        "apellido": "Lopez",
+        "genero": "Femenino",
+        "direccion": "Ciudad",
+        "telefono": "12345678"
+    }
+]

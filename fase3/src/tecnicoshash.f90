@@ -27,7 +27,7 @@ module tecnicoshash
             procedure :: insert
             procedure :: rehashing
             procedure :: show
-            procedure :: buscar
+            procedure :: buscart
             procedure :: listadotecnicos
     end type tecnicos_hash
     contains
@@ -45,7 +45,6 @@ module tecnicoshash
         if ( allocated(this%h) ) then
             deallocate(this%h)
         end if
-
         allocate(this%h(m))
 
         call temporal%inicializador()
@@ -123,7 +122,7 @@ module tecnicoshash
         write(*,'(A)') ']'
     end subroutine show
 
-    subroutine buscar(this,k)
+    subroutine buscart(this,k)
         class(tecnicos_hash), intent(inout) :: this
         integer(kind=8), intent(in) :: k
         integer :: i = 0, d
@@ -135,7 +134,7 @@ module tecnicoshash
         end do
 
         call this%h(d)%imprimir_tecnico()
-    end subroutine buscar
+    end subroutine buscart
     subroutine listadotecnicos(this)
         class(tecnicos_hash), intent(inout) :: this
         integer :: i
@@ -219,4 +218,7 @@ module tecnicoshash
         print*, "Telefono: ", this%telefono
         print*,"--------------------------------------------"
     end subroutine imprimir_tecnico 
+
+
+
 end module tecnicoshash

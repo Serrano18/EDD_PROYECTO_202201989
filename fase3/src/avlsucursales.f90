@@ -1,7 +1,7 @@
 module avlsucursales
     use tecnicoshash, only: tecnicos_hash
     implicit none
-
+    
     type :: sucursal
         integer :: id = -1
         character(:),allocatable :: departamento,direccion,contrasena
@@ -13,7 +13,6 @@ module avlsucursales
         procedure :: set_direccion
         procedure   :: set_contrasena
         procedure :: imprimir_sucursal
-        !procedure :: inicializar_tecnicos
         procedure :: inicializar_sucursal
         
     end type sucursal
@@ -48,7 +47,7 @@ module avlsucursales
         procedure :: buscar
         procedure :: buscar_rec
     end type sucursalesavl
-
+    
     contains
     subroutine eliminar(this, id)
         class(sucursalesavl), intent(inout) :: this
@@ -238,7 +237,7 @@ subroutine dotgen(this)
         close(unit)
 
         call execute_command_line('dot -Tsvg img/avl_branches.dot -o img/avl_branches.svg')
-        call execute_command_line('eog img/avl_branches.svg')
+        call execute_command_line('start img/avl_branches.svg')
     end subroutine dotgen
 
     subroutine dotgen_rec(this, tmp, unit)
@@ -393,11 +392,6 @@ subroutine dotgen(this)
         print*,"------------------------------------------------------"
 
     end subroutine imprimir_sucursal
-
-  ! subroutine inicializar_tecnicos(this)
-    !    class(sucursal), intent(inout) :: this
-     !   call this%tecnicos%init(7,30,70)
-    !end subroutine inicializar_tecnicos
 
     subroutine inicializar_sucursal(this)
         class(sucursal), intent(inout) :: this

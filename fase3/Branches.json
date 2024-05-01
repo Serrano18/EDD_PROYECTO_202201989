@@ -1,0 +1,92 @@
+[
+    {
+        "id": "1",
+        "departamento": "Guatemala",
+        "direccion": "Zona 1",
+        "password": "1234"
+    },
+    {
+        "id": "2",
+        "departamento": "Guatemala",
+        "direccion": "Zona 2",
+        "password": "1234"
+    },
+    {
+        "id": "3",
+        "departamento": "Guatemala",
+        "direccion": "Zona 3",
+        "password": "1234"
+    },
+    {
+        "id": "4",
+        "departamento": "Guatemala",
+        "direccion": "Zona 4",
+        "password": "1234"
+    },
+    {
+        "id": "5",
+        "departamento": "Guatemala",
+        "direccion": "Zona 5",
+        "password": "1234"
+    },
+    {
+        "id": "6",
+        "departamento": "Guatemala",
+        "direccion": "Zona 6",
+        "password": "1234"
+    },
+    {
+        "id": "7",
+        "departamento": "Guatemala",
+        "direccion": "Zona 7",
+        "password": "1234"
+    },
+    {
+        "id": "8",
+        "departamento": "Guatemala",
+        "direccion": "Zona 8",
+        "password": "1234"
+    },
+    {
+        "id": "9",
+        "departamento": "Guatemala",
+        "direccion": "Zona 9",
+        "password": "1234"
+    },
+    {
+        "id": "10",
+        "departamento": "Guatemala",
+        "direccion": "Zona 10",
+        "password": "1234"
+    },
+    {
+        "id": "11",
+        "departamento": "Guatemala",
+        "direccion": "Zona 11",
+        "password": "1234"
+    },
+    {
+        "id": "12",
+        "departamento": "Guatemala",
+        "direccion": "Zona 12",
+        "password": "1234"
+    },
+    {
+        "id": "13",
+        "departamento": "Guatemala",
+        "direccion": "Zona 13",
+        "password": "1234"
+    },
+    {
+        "id": "14",
+        "departamento": "Guatemala",
+        "direccion": "Zona 14",
+        "password": "1234"
+    },
+    {
+        "id": "15",
+        "departamento": "Guatemala",
+        "direccion": "Zona 15",
+        "password": "1234"
+    }
+]

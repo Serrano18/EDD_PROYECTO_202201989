@@ -1,0 +1,22 @@
+{
+    "grafo":[
+        {
+            "s1":"21",
+            "s2":"2",
+            "distancia": "5",
+            "imp_mantenimiento": "3"
+        },
+        {
+            "s1":"21",
+            "s2":"3",
+            "distancia": "7",
+            "imp_mantenimiento": "4"
+        },
+        {
+            "s1":"21",
+            "s2":"4",
+            "distancia": "8",
+            "imp_mantenimiento": "5"
+        }
+    ]
+}

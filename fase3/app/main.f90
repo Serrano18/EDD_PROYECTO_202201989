@@ -1,15 +1,17 @@
 program main
   use cargasmasivas
-  use avlsucursales
-  
+ 
   implicit none
   type(sucursal),pointer :: sucursal_actual
+  type(tecnicos),pointer :: tecnico_actual
+  integer(kind=8)::dpi
   type(sucursalesavl) :: sucursales
+  type(lista_rutas) ::rut
   character(len=1) :: opcion
   
   character (len=256 ) :: archivo
   do 
-    write(*, '(A)') "|-----------------------------------------|"
+    write(*, '(A)') "|------------------------------------------|"
     write(*, '(A)') "|   Bienvenido A  Pixel Print Studio      |"
     write(*, '(A)') "|-----------------------------------------|"           
     write(*, '(A)') "| 1. Iniciar Sesion                       |"  
@@ -67,9 +69,11 @@ program main
             print *, "Ingrese el nombre del Archivo de Sucursales: "
             read *, archivo
             call cargaMasivaSucursales(archivo,sucursales)
-
+            
             case ('2')
-
+              print *, "Ingrese el nombre del Archivo de Rutas: "
+              read *, archivo
+              call cargaMasivaRutas(archivo,rut)
             case ('3')
               call sucursales%inorder(sucursales%root)
               write(*, '(A)') "Ingrese el ID de la sucursal:"
@@ -89,7 +93,7 @@ program main
               end if
 
             case ('4')
-
+              call menu_graficos()
             case ('5')
               exit
             case default
@@ -109,15 +113,19 @@ program main
         write(*, '(A)') "|   5. Generar Reporte                    |"
         write(*, '(A)') "|   6. Regresar                           |"
         write(*, '(A)') "|-----------------------------------------|"
+        read *, opc3
         select case (opc3)
           case ('1')
             print *, "Ingrese el nombre del Archivo de Tecnicos: "
-            read *, archivo
+            read (*,'(A)') archivo
             call cargaMasivaTecnicos(archivo,sucursal_actual%tecnicos)
           case ('2')
-            call sucursal_actual%tecnicos%listadotecnicos()
           case ('3')
+            write(*, '(A)') "Ingrese el DPI del Tecnico:"
+            read *, dpi
+            call sucursal_actual%tecnicos%buscart(dpi)
           case ('4')
+            call sucursal_actual%tecnicos%listadotecnicos()
           case ('5')
           case ('6')
             exit
@@ -126,5 +134,31 @@ program main
         end select
       end do
     end subroutine menu_sucursales
+
+    subroutine menu_graficos()
+      character(len=1) :: opc4
+      do
+        write(*, '(A)') "|-----------------------------------------|"
+        write(*, '(A)') "|   1. Grafo de sucursales                |"
+        write(*, '(A)') "|   2. Grafico de Rutas                   |"
+        write(*, '(A)') "|   3. Arbol de Merckle                   |"
+        write(*, '(A)') "|   4. BlockChain                         |"
+        write(*, '(A)') "|   5. Tabla Hash                         |"
+        write(*, '(A)') "|   6. Regresar                           |"
+        write(*, '(A)') "|-----------------------------------------|"
+        read *, opc4
+        select case (opc4)
+        case ('1')
+          call sucursales%dotgen()
+        case ('2')
+        case ('3')  
+        case ('4')
+        case ('5')  
+        case ('6')
+          exit
+        end select
+      end do
+
+    end subroutine menu_graficos
     
 end program main
