@@ -1,0 +1,7 @@
+digraph TH {
+rankdir=LR;
+node [shape=record];
+node0[label="<f0>1|<f1>2|<f2>3|<f3>4|<f4>5|<f5>6|<f6>7|<f7>8|<f8>9|<f9>10|<f10>11|<f11>12|<f12>13|<f13>14|<f14>15|<f15>16|<f16>17|<f17>18|<f18>19|<f19>20|<f20>21|<f21>22|<f22>23|<f23>24|<f24>25|<f25>26|<f26>27|<f27>28"];
+node1[label="<f0>-1|<f1>-1|<f2>Carlos|<f3>-1|<f4>Pedro|<f5>-1|<f6>-1|<f7>-1|<f8>-1|<f9>María|<f10>-1|<f11>-1|<f12>-1|<f13>-1|<f14>Calificacion|<f15>Javier|<f16>-1|<f17>Elena|<f18>Ana|<f19>-1|<f20>Laura|<f21>Luis|<f22>-1|<f23>-1|<f24>Sofía|<f25>-1|<f26>-1|<f27>-1"];
+node0 -> node1;
+}

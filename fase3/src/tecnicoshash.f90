@@ -19,7 +19,7 @@ module tecnicoshash
     end type tecnicos
     type :: tecnicos_hash
         integer :: n,m,mini,maxi
-        type(tecnicos), dimension(:), allocatable::h
+        type(tecnicos), allocatable::h(:)
         contains
             procedure :: init
             procedure :: division
@@ -29,8 +29,55 @@ module tecnicoshash
             procedure :: show
             procedure :: buscart
             procedure :: listadotecnicos
+            procedure :: graficoth
     end type tecnicos_hash
     contains
+    subroutine graficoth(this, filename)
+        class(tecnicos_hash), intent(inout) :: this
+        character(len=*), intent(in) :: filename
+        integer :: i
+        integer :: unit
+    
+        unit = 10  
+        open(unit, file=filename, status='replace')
+        
+        write(unit, '(A)') 'digraph TH {'
+        write(unit, '(A)') 'rankdir=LR;'
+        write(unit, '(A)') 'node [shape=record];'
+        write(unit, '(A)', advance='no') 'node0[label="'
+
+        do i = 1, this%m
+            write(unit, '(A,I0,A,I0)', advance='no') '<f', i-1, '>',i
+            if ( i /= this%m ) then
+                write(unit, '(A)', advance='no') '|'
+            end if
+        end do
+
+        write(unit, '(A)') '"];'
+
+        write(unit, '(A)', advance='no') 'node1[label="'
+
+     
+                do i = 1, this%m
+                    if ( this%h(i)%dpi /= -1 ) then
+                        write(unit, '(A,I0,A,A)', advance='no') '<f', i-1, '>', adjustl(this%h(i)%nombre)
+                    else
+                        write(unit, '(A,I0,A,A)', advance='no') '<f', i-1, '>', "-1"
+                    end if
+                    if ( i /= this%m ) then
+                        write(unit, '(A)', advance='no') '|'
+                    end if
+                end do
+
+        write(unit, '(A)') '"];'
+        write(unit, '(A)') 'node0 -> node1;'
+        write(unit, '(A)') '}'
+        close(unit)
+    
+        close(unit)
+        call system('dot -Tpng ' // trim(filename) // ' -o ' // trim(adjustl(filename)) // '.png')
+        call system('start ' // trim(adjustl(filename)) // '.png')
+    end subroutine graficoth
 
     subroutine init(this, m, mini, maxi)
         class(tecnicos_hash), intent(inout) :: this
@@ -79,6 +126,9 @@ module tecnicoshash
 
         do while(this%h(l)%dpi /= -1)
             l = this%linear(temp%dpi, i)
+            if ( l == 0) then
+                l = 1
+            end if
             i = i + 1
         end do
 

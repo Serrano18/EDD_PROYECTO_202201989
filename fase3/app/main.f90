@@ -137,6 +137,8 @@ program main
 
     subroutine menu_graficos()
       character(len=1) :: opc4
+      character(len=256) :: pass
+      integer :: sucursal_id
       do
         write(*, '(A)') "|-----------------------------------------|"
         write(*, '(A)') "|   1. Grafo de sucursales                |"
@@ -154,6 +156,16 @@ program main
         case ('3')  
         case ('4')
         case ('5')  
+          
+          call sucursales%inorder(sucursales%root)
+          write(*, '(A)') "Ingrese el ID de la sucursal:"
+          read *, sucursal_id
+          sucursal_actual => sucursales%buscar(sucursal_id)
+          if(associated(sucursal_actual)) then
+              call sucursal_actual%tecnicos%graficoth("tabla_hash.dot")
+          else
+            write(*, '(A)') "Sucursal no encontrada"
+          end if
         case ('6')
           exit
         end select
