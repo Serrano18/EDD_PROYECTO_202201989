@@ -74,6 +74,30 @@ Representa un nodo en una lista enlazada. Contiene un objeto resultado (res) y u
 Representa una lista enlazada de nodos nodores. Contiene punteros a la cabeza y la cola de la lista (head y tail), un entero size que representa el número de nodos en la lista, y un entero total_weightr que representa el peso total de los resultados en la lista. También contiene procedimientos para insertar un resultado en la lista (insertarResultado) e imprimir la lista (imprimirResultado).
 
 El subrutina imprimir imprime las propiedades de un objeto resultado. La subrutina imprimirResultado imprime el peso total de los resultados en la lista y luego imprime cada resultado en la lista. La subrutina insertarResultado inserta un nuevo resultado en la lista. Crea un nuevo nodo nodores, establece las propiedades del objeto resultado en el nodo basado en las propiedades de un objeto ruta, y luego inserta el nodo en la lista. Si la lista está vacía, el nuevo nodo se convierte en la cabeza y la cola de la lista. De lo contrario, el nuevo nodo se agrega al final de la lista, y se actualiza el peso total de los resultados en la lista.
+El módulo `graficar` contiene dos tipos de datos: `nodog` y `grafica`. `nodog` representa un nodo en un grafo, con un identificador entero, una lista de rutas `rutas`, y un puntero al siguiente nodo `next`. `grafica` representa un grafo, con un tamaño entero, un puntero al nodo cabeza `head`, y varios procedimientos para manipular el grafo.
+
+### Módulo graficar en Fortran
+Los procedimientos en `grafica` incluyen:
+
+- `insertarg`: Inserta un nodo en el grafo.
+- `agregarnodo`: Agrega un nodo al grafo.
+- `agregarruta`: Agrega una ruta al grafo.
+- `obtenernodo`: Obtiene un nodo del grafo.
+- `show`: Imprime el grafo.
+- `rutamascorta`: Encuentra la ruta más corta en el grafo.
+
+La función `rutamascorta` parece implementar una variación del algoritmo de Dijkstra para encontrar el camino más corto entre dos nodos en un grafo. Utiliza una cola de prioridad para realizar un seguimiento de los nodos a visitar y actualiza los pesos de las rutas a medida que recorre el grafo.
+
+### Módulo sha256 en Fortran
+
+- `sha256(str)`: Esta función toma una cadena como entrada y devuelve su hash SHA-256.
+- `dirty_sha256(str)`: Esta función también calcula el hash SHA-256 de una cadena, pero no realiza una operación de intercambio de bytes.
+- `sha256b(str, swap)`: Esta es la función principal que calcula el hash SHA-256. Toma una cadena y un indicador de intercambio como entrada. Si el indicador de intercambio es 1, realiza una operación de intercambio de bytes.
+- `swap32(inp)`, `swap64(inp)`, `swap64a(inp)`: Estas funciones realizan operaciones de intercambio de bytes en enteros de 32 bits y 64 bits.
+- `ch(a, b, c)`, `maj(a, b, c)`: Estas funciones implementan las operaciones 'Ch' y 'Maj' utilizadas en el algoritmo SHA-256.
+- `cs0(a)`, `cs1(a)`, `ms0(a)`, `ms1(a)`: Estas funciones implementan las operaciones 'Sigma0', 'Sigma1', 'sigma0' y 'sigma1' utilizadas en el algoritmo SHA-256.
+
+El algoritmo SHA-256 funciona inicializando un conjunto de ocho palabras de 32 bits con ciertos valores fijos, luego procesando los datos de entrada en fragmentos de 512 bits. Para cada fragmento, expande el fragmento en una secuencia de 64 palabras de 32 bits, luego actualiza las ocho palabras usando una serie de operaciones a nivel de bits. El hash final es la concatenación de los valores finales de las ocho palabras.
 
 ## Requerimientos del Sistema
 
